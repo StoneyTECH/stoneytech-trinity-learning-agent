@@ -13,6 +13,12 @@
       "drilled_at": "2026-05-01",
       "draft_path": "/Users/austondeville/JobSearch/stoneytech-site/src/posts/learn/_drafts/daily-drill-2026-05-01-verification-loop-discipline.svx",
       "status": "draft"
+    },
+    {
+      "slug": "ship-with-failure-mode-named",
+      "drilled_at": "2026-05-01",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-01-ship-with-failure-mode-named.svx",
+      "status": "draft"
     }
   ]
 }
