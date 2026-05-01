@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
+import { notifyTelegram } from './notify-telegram.ts';
 import type { Concept, LedgerEntry } from './types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -132,6 +133,37 @@ const entry: LedgerEntry = {
 const updatedLedger = { ...ledger, drills: [...ledger.drills, entry] };
 writeFileSync(LEDGER_PATH, JSON.stringify(updatedLedger, null, 2) + '\n', 'utf-8');
 console.log(`✓ Ledger updated: ${LEDGER_PATH}`);
+
+// Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking
+// — we'd rather have the draft on disk and a missed notification than vice versa.
+if (process.env.NOTIFY !== '0') {
+  // Try to extract the excerpt from the generated frontmatter for a richer digest.
+  const excerptMatch = draftText.match(/excerpt:\s*([^\n]+)/);
+  const excerpt = excerptMatch ? excerptMatch[1].replace(/^["']|["']$/g, '').trim() : '';
+
+  // GitHub link if we know the repo URL (set by CI).
+  const ghRepo = process.env.GITHUB_REPOSITORY; // e.g. stoney-arch/drill-agent
+  const ghBranch = process.env.GITHUB_REF_NAME || 'main';
+  const draftRel = draftPath.includes('/output/drafts/')
+    ? `output/drafts/${filename}`
+    : `_drafts/${filename}`;
+  const ghLink = ghRepo
+    ? `https://github.com/${ghRepo}/blob/${ghBranch}/${draftRel}`
+    : null;
+
+  const lines = [
+    `🪛 <b>Daily drill — ${today}</b>`,
+    ``,
+    `<b>Concept:</b> ${concept.title}`,
+    `<b>Lever:</b> ${concept.lever} · <b>Tier:</b> ${concept.tier} · <b>Anchor:</b> axiom #${concept.anchor_axiom}`,
+    excerpt ? `\n<i>${excerpt}</i>` : ``,
+    ``,
+    `<b>Stats:</b> ${response.usage.input_tokens} in / ${response.usage.output_tokens} out · ${elapsedSec}s · ${draftText.length} chars`,
+    ``,
+    ghLink ? `<a href="${ghLink}">📄 View draft on GitHub</a>` : `📄 ${draftPath}`
+  ];
+  await notifyTelegram({ message: lines.filter(Boolean).join('\n') });
+}
 
 console.log('');
 console.log('Next step: review the draft, refine, then move to src/posts/learn/ and run the GVAR v3.3 panel via webhook.');
