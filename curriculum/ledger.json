@@ -1,0 +1,12 @@
+{
+  "schema": "drill-agent-ledger/v1",
+  "description": "Append-only record of which concepts have been drilled and when. The picker uses this to skip already-drilled concepts on each daily run.",
+  "drills": [
+    {
+      "slug": "determinism-ladder",
+      "drilled_at": "2026-05-01",
+      "draft_path": "/Users/austondeville/JobSearch/stoneytech-site/src/posts/learn/_drafts/daily-drill-2026-05-01-determinism-ladder.svx",
+      "status": "draft"
+    }
+  ]
+}

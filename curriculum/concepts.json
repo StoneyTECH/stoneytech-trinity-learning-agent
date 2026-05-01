@@ -1,0 +1,206 @@
+{
+  "schema": "drill-agent-curriculum/v1",
+  "description": "Concepts the drill agent picks from. Each is one teachable unit. Tier: 1=must-own, 2=must-recognize, 3=vocabulary. Prerequisites are the slugs that should be drilled before this one. Tags map to existing essays + axioms.",
+  "concepts": [
+    {
+      "slug": "determinism-ladder",
+      "title": "The Determinism Ladder — every lever trades autonomy for determinism",
+      "tier": 1,
+      "lever": "spine",
+      "prerequisites": [],
+      "tags": ["axiom-2", "spine"],
+      "war_story_hint": "The team that bought a frontier model first and then realized every architectural choice downstream was constrained by it.",
+      "anchor_axiom": 2
+    },
+    {
+      "slug": "smallest-lever-wins",
+      "title": "Smallest lever wins — pick the cheapest tool that closes the failure mode",
+      "tier": 1,
+      "lever": "spine",
+      "prerequisites": ["determinism-ladder"],
+      "tags": ["axiom-1", "spine"],
+      "war_story_hint": "Three weeks building an MCP server for `aws s3 ls` that should have been six lines of system prompt.",
+      "anchor_axiom": 1
+    },
+    {
+      "slug": "model-portability-and-its-limits",
+      "title": "Model portability and the cases where it doesn't apply",
+      "tier": 1,
+      "lever": "model",
+      "prerequisites": ["determinism-ladder"],
+      "tags": ["axiom-12", "axiom-18", "model-selection"],
+      "war_story_hint": "EU healthcare team's week-26 legal sit-down — the model didn't run in a region the data could legally enter.",
+      "anchor_axiom": 12
+    },
+    {
+      "slug": "deployment-context-first",
+      "title": "Deployment context is decision-zero, not the model",
+      "tier": 1,
+      "lever": "deployment",
+      "prerequisites": ["model-portability-and-its-limits"],
+      "tags": ["axiom-18", "deployment-context"],
+      "war_story_hint": "The team that picked Pinecone-Cloud (default region) in week one and migrated everything in month nine when an EU customer's DPA dropped.",
+      "anchor_axiom": 18
+    },
+    {
+      "slug": "rag-vs-lora",
+      "title": "RAG is for facts. LoRA is for skills. Don't mix them up.",
+      "tier": 1,
+      "lever": "context",
+      "prerequisites": ["determinism-ladder"],
+      "tags": ["axiom-1", "rag", "lora"],
+      "war_story_hint": "Six weeks fine-tuning on the company wiki. Twelve days after launch, the docs changed and the model didn't notice.",
+      "anchor_axiom": 1
+    },
+    {
+      "slug": "api-prompt-cache-economics",
+      "title": "Prompt caching is the silent cost-multiplier — and a privacy surface",
+      "tier": 2,
+      "lever": "api",
+      "prerequisites": [],
+      "tags": ["api", "axiom-17"],
+      "war_story_hint": "A B2B SaaS that turned prompt caching on for cost wins and shipped customer prompts to a vendor cache without realizing it crossed a DPA boundary.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "lora-when-and-when-not",
+      "title": "LoRA is the wrong tool for new facts and the right tool for new style",
+      "tier": 1,
+      "lever": "lora",
+      "prerequisites": ["rag-vs-lora"],
+      "tags": ["lora", "axiom-1"],
+      "war_story_hint": "The brand-voice fine-tune that picked up specific prices from the training set and started confidently quoting old prices forever.",
+      "anchor_axiom": 1
+    },
+    {
+      "slug": "rag-naive-vs-hybrid",
+      "title": "Naive vector RAG fails predictably — hybrid lexical-plus-vector wins",
+      "tier": 1,
+      "lever": "rag",
+      "prerequisites": ["rag-vs-lora"],
+      "tags": ["rag", "axiom-1"],
+      "war_story_hint": "The chatbot asked how to add a user; got back the instructions for how to remove one. Verbs that distinguish actions barely move the cosine.",
+      "anchor_axiom": 1
+    },
+    {
+      "slug": "rag-prompt-injection-in-chunks",
+      "title": "Adversarial RAG — the attacker plants a document the retriever trusts",
+      "tier": 1,
+      "lever": "rag",
+      "prerequisites": ["rag-naive-vs-hybrid"],
+      "tags": ["rag", "axiom-17", "security"],
+      "war_story_hint": "Customer-support agent that quoted 50% discounts because a customer planted 'ignore previous instructions' in a support ticket the retriever indexed.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "skills-as-supply-chain",
+      "title": "Skills are executable supply-chain dependencies attached to the agent",
+      "tier": 2,
+      "lever": "skills",
+      "prerequisites": ["determinism-ladder"],
+      "tags": ["skills", "axiom-17", "security"],
+      "war_story_hint": "Community-published 'code-review' skill that base64-encoded files under review and curl'd them to the publisher's domain.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "mcp-when-it-earns-its-weight",
+      "title": "MCP earns its weight when tools × clients > ~10 — under that, simpler tools win",
+      "tier": 1,
+      "lever": "mcp",
+      "prerequisites": ["smallest-lever-wins"],
+      "tags": ["mcp", "axiom-14"],
+      "war_story_hint": "Three weeks building an MCP server for two tools when shell-out + a Bash tool would have shipped in an hour.",
+      "anchor_axiom": 14
+    },
+    {
+      "slug": "mcp-confused-deputy",
+      "title": "Confused deputy — the MCP server holds tools the model invokes on the user's authority",
+      "tier": 1,
+      "lever": "mcp",
+      "prerequisites": ["mcp-when-it-earns-its-weight"],
+      "tags": ["mcp", "axiom-17", "security"],
+      "war_story_hint": "Support agent's read-only ticket tool returned 47 admin tickets because a customer's prompt-injected ticket asked it to.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "agents-vs-workflows",
+      "title": "If you can draw the flowchart, you don't need an agent",
+      "tier": 1,
+      "lever": "agents",
+      "prerequisites": ["smallest-lever-wins"],
+      "tags": ["agents", "axiom-1"],
+      "war_story_hint": "Most things called 'agents' today are workflows with one or two LLM steps. The real agent question: which step is genuinely emergent?",
+      "anchor_axiom": 1
+    },
+    {
+      "slug": "agents-excessive-agency",
+      "title": "Excessive agency — bound the verbs, log every call, cap the budget",
+      "tier": 1,
+      "lever": "agents",
+      "prerequisites": ["agents-vs-workflows"],
+      "tags": ["agents", "axiom-17", "security"],
+      "war_story_hint": "Research-assistant agent that recursively flagged itself for more research on a bug report containing trigger ASCII art. 50 iterations, $200 in inference cost, hours.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "eval-eighth-lever",
+      "title": "Eval and observability is the eighth lever — without it, the other seven are leaps of faith",
+      "tier": 1,
+      "lever": "eval",
+      "prerequisites": ["determinism-ladder"],
+      "tags": ["eval", "axiom-5"],
+      "war_story_hint": "IT-support bot that silently degraded for six months before ticket volume forced the discovery.",
+      "anchor_axiom": 5
+    },
+    {
+      "slug": "eval-llm-as-judge-biases",
+      "title": "LLM-as-judge has three known biases — engineer around them",
+      "tier": 2,
+      "lever": "eval",
+      "prerequisites": ["eval-eighth-lever"],
+      "tags": ["eval", "axiom-13"],
+      "war_story_hint": "Position bias: the judge prefers whichever option came first. Self-enhancement bias: it prefers its own family. Length bias: longer reads as better.",
+      "anchor_axiom": 13
+    },
+    {
+      "slug": "eval-trace-pii-surface",
+      "title": "Trace stores capture full prompts — they're a PII/PHI surface, treat them accordingly",
+      "tier": 1,
+      "lever": "eval",
+      "prerequisites": ["eval-eighth-lever"],
+      "tags": ["eval", "axiom-17", "axiom-18", "security"],
+      "war_story_hint": "Team that wired up LangSmith Cloud for 'free' observability and shipped six months of customer-support tickets to a third-party SaaS in another region.",
+      "anchor_axiom": 17
+    },
+    {
+      "slug": "context-on-prem-architecture",
+      "title": "On-prem agentic architectures — same levers, different artifacts at every layer",
+      "tier": 2,
+      "lever": "deployment",
+      "prerequisites": ["deployment-context-first"],
+      "tags": ["deployment-context", "axiom-18"],
+      "war_story_hint": "Defense-contractor team that asked for Claude over VPN. Two weeks of security review later: self-hosted Qwen 14B + pgvector + OpenLLMetry, and the system shipped.",
+      "anchor_axiom": 18
+    },
+    {
+      "slug": "verification-loop-discipline",
+      "title": "Generate · Verify · Refine before pasting — every artifact, every time",
+      "tier": 1,
+      "lever": "process",
+      "prerequisites": [],
+      "tags": ["axiom-4", "process"],
+      "war_story_hint": "The four panel-verified essays that shipped without panel verification because the chain wasn't operational. The discipline went into code the same day.",
+      "anchor_axiom": 4
+    },
+    {
+      "slug": "ship-with-failure-mode-named",
+      "title": "Ship with the failure mode named — every system, before it goes to production",
+      "tier": 1,
+      "lever": "process",
+      "prerequisites": [],
+      "tags": ["axiom-13", "process"],
+      "war_story_hint": "The on-call who found out about the LLM degradation from the customer who noticed first. The failure mode was nameable in week one; the team didn't name it until month six.",
+      "anchor_axiom": 13
+    }
+  ]
+}
