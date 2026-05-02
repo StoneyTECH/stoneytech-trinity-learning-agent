@@ -19,6 +19,19 @@
       ],
       "last_studied": "2026-05-02",
       "next_due": "2026-05-03"
+    },
+    {
+      "slug": "smallest-lever-wins",
+      "ease_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "attempts": [
+        {
+          "attempted_at": "2026-05-02",
+          "question": "A teammate proposes building a custom MCP server so the agent can list S3 buckets, query a Postgres table, and hit one internal REST endpoint. They've already sketched the protocol handlers. What's the one thing you push back on before they write another line of code, and how do you frame the alternative?",
+          "canonical_answer": "I stop them at the protocol handlers. The pushback is simple: you're reaching for the heaviest lever in the stack to solve a problem the lightest lever already closes. MCP is real infrastructure — auth, lifecycle, schema, version drift, a server you now own forever. For three read-only calls, six lines of system prompt plus a shell tool or a thin function wrapper does the same job and you can delete it on a Friday without a migration. The named failure mode is over-leveraging: paying MCP-tier complexity cost for prompt-tier value. The decision lever is, walk up the stack — prompt, then tool function, then RAG, then fine-tune, then MCP — and stop at the first rung that actually closes the gap. I lost three weeks once building an MCP server for `aws s3 ls`. Six lines of system prompt would have shipped it Monday. Smallest lever wins. You can always graduate up; you rarely get the weeks back."
+        }
+      ]
     }
   ]
 }
