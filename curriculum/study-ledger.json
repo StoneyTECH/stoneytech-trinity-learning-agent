@@ -1,0 +1,24 @@
+{
+  "schema": "drill-agent-study-ledger/v1",
+  "description": "Spaced-repetition state per concept. Each entry tracks SM-2 (ease_factor / interval / repetitions / next_due) plus all attempts.",
+  "entries": [
+    {
+      "slug": "determinism-ladder",
+      "ease_factor": 2.5,
+      "interval": 1,
+      "repetitions": 1,
+      "attempts": [
+        {
+          "attempted_at": "2026-05-02",
+          "question": "A junior engineer on your team is starting a greenfield agentic project and their first move is to pick the model — they're benchmarking GPT-5 vs Claude vs Gemini before anything else. What's the one thing you push back on, and what should they be doing instead?",
+          "canonical_answer": "Stop. Picking the model first is the classic determinism-ladder inversion, and it's the failure mode I've watched burn whole teams. Once you've committed to a frontier model, every architectural choice downstream — your tool surface, your context budget, your retry semantics, your eval harness — gets constrained by that model's quirks. You've spent your autonomy budget before you've defined the problem. The ladder runs the other way: start at the most deterministic rung you can tolerate. Can this be a SQL query? A typed function? A constrained DSL? A small fine-tuned classifier? Only climb to a general-purpose LLM when the rung below genuinely can't carry the load. Every lever — schema constraints, tool whitelists, structured outputs, model size, temperature, agentic loops — trades autonomy for determinism, and you want to be spending autonomy deliberately, not by default. Concrete example: I've seen a team use GPT-4 to extract dates from invoices. A regex and a date library shipped in two days, ran for free, and never hallucinated a fiscal quarter.",
+          "quality": 4,
+          "graded_at": "2026-05-02",
+          "notes": "tested via cli, looked solid"
+        }
+      ],
+      "last_studied": "2026-05-02",
+      "next_due": "2026-05-03"
+    }
+  ]
+}
