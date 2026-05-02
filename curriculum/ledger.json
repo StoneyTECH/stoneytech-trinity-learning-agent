@@ -19,6 +19,12 @@
       "drilled_at": "2026-05-01",
       "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-01-ship-with-failure-mode-named.svx",
       "status": "draft"
+    },
+    {
+      "slug": "model-portability-and-its-limits",
+      "drilled_at": "2026-05-02",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-02-model-portability-and-its-limits.svx",
+      "status": "draft"
     }
   ]
 }

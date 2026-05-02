@@ -1,0 +1,75 @@
+---
+title: Model portability and the cases where it doesn't apply
+date: 2026-05-02
+minutes: 9
+tags: ["axiom-12","axiom-18","model-selection","portability","compliance"]
+excerpt: Model portability is a real lever, but jurisdiction, latency floors, and licensing collapse it into a constraint problem long before benchmarks matter.
+verification:
+  status: pending-panel
+  panel_architecture: "GVAR v3.3 — pending first run via webhook"
+axioms_applied: [12, 18, 7]
+axiom_outcomes:
+  - n: 12
+    verdict: held
+    note: Portability is a property of the deployment surface, not the weights.
+  - n: 18
+    verdict: refined
+    note: Determinism-ladder pushes work down, but jurisdiction can lock the top rung.
+  - n: 7
+    verdict: held
+    note: The cheapest assumption to break is "the best model is available."
+
+## A waiting room in Frankfurt
+
+Week 26. An EU healthcare team — call them a mid-size diagnostic imaging group with deployments in Germany, Austria, and the Netherlands — sat down with their legal counsel for what was supposed to be a thirty-minute compliance sign-off. They had spent five months building a triage co-pilot on a US-hosted frontier model. Eval scores were good. The radiologists liked it. Procurement was lined up.
+
+Counsel asked one question: where does the inference happen? The answer was a US region. The follow-up: where does the patient data live, and under what processing agreement does it cross? The room went quiet. Six months of work hit a wall not because the model was wrong, but because the model was unreachable from where the data was legally allowed to sit.
+
+The lesson the team carried out: portability is not a property of the weights. It is a property of the surface you can deploy them on, in the jurisdiction you actually operate in.
+
+## The high-school version
+
+Think of a model the way you think of a chef. A great chef can cook anywhere — in theory. But if the kitchen has to be in Frankfurt, and the chef is contractually only allowed to cook in California, and the ingredients are not allowed on a plane, then the chef's skill stops mattering. What matters is who is allowed to cook where, with whose ingredients, under whose rules.
+
+Model portability is the question of how easily you can move a model — or swap it for another — without breaking your product. The answer is "very easily, until it isn't," and the "isn't" is almost always about geography, contracts, or hardware, not about machine learning.
+
+## The technical version
+
+When engineers talk about portability they usually mean something narrow: can I swap GPT-4-class for Claude-class behind an OpenAI-compatible API and keep my prompts, evals, and tools working? For that flavor of portability, the answer is mostly yes — and getting better — because the industry has converged on a small number of interface shapes.
+
+But portability has at least four distinct axes, and most teams only check the first:
+
+- **Interface portability.** Same request/response shape, same tool-calling protocol, same streaming semantics.
+- **Behavioral portability.** Same prompt produces equivalent outputs at acceptable variance. This is where most swaps quietly fail.
+- **Deployment portability.** Can the weights run in your VPC, your region, your air-gapped enclave, your on-prem GPU?
+- **Legal portability.** Does your data processing agreement, your sub-processor list, your residency commitment, and your sectoral regulation permit inference in the place the model is reachable from?
+
+Interface portability is solved. Behavioral portability is partially solved by good evals. Deployment and legal portability are where projects die.
+
+## The formal frame
+
+The research literature treats portability mostly as a distillation or transfer problem — Hinton et al.'s knowledge distillation (2015) is the canonical reference for compressing a teacher model's behavior into a smaller student that fits a different deployment envelope. More recent work on LoRA adapters (Hu et al., 2021) extends the same logic: keep the base, swap the cap.
+
+What the literature does not formalize, because it is a deployment concern rather than a modeling concern, is the constraint topology of where a given set of weights is *permitted* to execute. That is a graph problem over jurisdictions, contracts, and certifications, and it dominates the optimization long before perplexity does.
+
+## The trade-offs
+
+Every step you take toward portability costs you something at the top of the stack. Building against a least-common-denominator interface means giving up provider-specific features — extended context windows, native caching, structured output modes, proprietary tool-calling extensions — that often deliver the largest single quality jump in the system. Behavioral portability costs you eval surface area: every model you support is another matrix cell to maintain.
+
+Deployment portability is the most expensive. The moment you commit to "must run in-region, in our VPC, possibly air-gapped," you cut the candidate model list by an order of magnitude and you take on the operational burden of running inference yourself. You lose the ability to ride the frontier — by the time a new model is deployable in your environment, the hosted version has been in production for six months elsewhere.
+
+The decision lever: portability is a tax you pay on quality and velocity in exchange for not getting trapped. Pay it deliberately, not by default.
+
+## The scar
+
+Back to the imaging team. Their actual failure was not the legal meeting — it was the architectural decision in week 2, when someone asked "should we plan for in-region deployment?" and someone else said "let's get the prototype working first and figure out hosting later." That decision compounded for twenty-four weeks. The prompts grew dependent on a 200K context window the in-region candidates did not offer. The tool-calling glue assumed a function-calling dialect only the original provider shipped. The evals were tuned to the original model's quirks.
+
+When the team finally tried to port to a Frankfurt-hosted open-weights model that satisfied counsel, they did not just swap an API key. They rewrote the prompt layer, rebuilt the tool dispatcher, retuned the eval thresholds, and accepted a measurable quality drop the radiologists noticed within a week. The lesson was not "we picked the wrong model." It was "we let the unreachable model define the shape of our system."
+
+## Prototype assignment
+
+In an afternoon: take any existing prompt-and-tool agent you have running on a hosted frontier model. Stand up an open-weights model of roughly one tier below — Llama, Mistral, Qwen, dealer's choice — on a local GPU or a region-locked endpoint. Run your existing eval suite against both. Do not tune. Record the delta. The number you get is your portability tax for that system, today. Re-run it every quarter. Watch it shrink.
+
+## Spirit
+
+The determinism-ladder thesis says: push work down the stack, swap autonomy for determinism wherever you can. Model selection is the top rung — the place with the most autonomy and the least determinism. Portability is what keeps that rung from becoming load-bearing in a way you cannot escape. A system that assumes one specific model is a system that has handed a vendor, a jurisdiction, and a regulator each a veto over your roadmap. Engineer for the swap, even if you never make it.
