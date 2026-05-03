@@ -222,6 +222,17 @@
       "war_story_hint": "The on-call who found out about the LLM degradation from the customer who noticed first. The failure mode was nameable in week one; the team didn't name it until month six.",
       "anchor_axiom": 13
     },
+    {
+      "slug": "graph-constrained-execution",
+      "title": "The graph is the architecture — integrity and concurrency for agentic systems",
+      "tier": 1,
+      "register": "both",
+      "lever": "orchestration",
+      "prerequisites": ["determinism-ladder", "agents-vs-workflows"],
+      "tags": ["graph", "dag", "orchestration", "concurrency", "integrity", "axiom-2", "axiom-4"],
+      "war_story_hint": "The verifier panel that returned consensus on a Generator output the Generator hadn't actually written — Path A self-verify mode was sending the gold-standard through the Generator node, which then tried to score itself, blew its 3-strike timeout, and fell back to a stale draft the verifiers had already started reading. The bug wasn't in any node; it was in the edges. The fix wasn't a smarter prompt or a longer timeout — it was an explicit ifElse topology change that bypassed the Generator entirely when target_path == gold_standard_path. Every agentic system has a graph; the only choice is whether it's explicit or implicit, and implicit graphs become explicit ones the morning after a race-condition incident.",
+      "anchor_axiom": 2
+    },
 
     {
       "slug": "llms-as-a-loose-database",
