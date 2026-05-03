@@ -1,23 +1,32 @@
-// Main daily-run entry point. Picks the next undrilled concept, generates a
-// multi-level .svx draft via Claude Opus 4.7, writes it to
-// stoneytech-site/src/posts/learn/_drafts/, and appends an entry to the ledger.
+// Main daily-run entry point. Picks the next undrilled concept (filtered by
+// register), generates a register-appropriate .svx draft via Claude Opus 4.7,
+// writes it to the right drafts directory, and appends an entry to the ledger.
 //
-// Run: npm run drill              (writes to default DRAFTS_DIR + DRILL_LEDGER)
-//      DRY_RUN=1 npm run drill    (no draft write, no ledger append; prints to stdout)
-//      CONCEPT=<slug> npm run drill  (force a specific concept)
+// Run: npm run drill                                    (architect register, default)
+//      REGISTER=primer npm run drill                    (Demystify AI register)
+//      DRY_RUN=1 npm run drill                          (no draft write, no ledger append)
+//      DRY_RUN=1 SKIP_API=1 npm run drill               (no API call either)
+//      CONCEPT=<slug> npm run drill                     (force a specific concept)
 
 import Anthropic from '@anthropic-ai/sdk';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
+import { PRIMER_SYSTEM_PROMPT, buildPrimerUserPrompt } from './prompt-template-primer.ts';
 import { notifyTelegram } from './notify-telegram.ts';
-import type { Concept, LedgerEntry } from './types.ts';
+import type { Concept, LedgerEntry, RegisterFilter } from './types.ts';
+import { conceptMatchesRegister } from './types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
+
+// Register: 'architect' (default, Determinism Ladder voice) or 'primer' (Demystify AI voice).
+const REGISTER: RegisterFilter =
+  process.env.REGISTER === 'primer' ? 'primer' : 'architect';
+const IS_PRIMER = REGISTER === 'primer';
 
 const DRY_RUN_NO_API = process.env.DRY_RUN === '1' && process.env.SKIP_API === '1';
 const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -27,9 +36,16 @@ if (!apiKey && !DRY_RUN_NO_API) {
   process.exit(1);
 }
 
-const DRAFTS_DIR =
-  process.env.DRAFTS_DIR ||
-  join(homedir(), 'JobSearch/stoneytech-site/src/posts/learn/_drafts');
+// Drafts dir defaults are register-aware.
+//   architect → ~/JobSearch/stoneytech-site/src/posts/learn/_drafts (Determinism Ladder series)
+//   primer    → ~/JobSearch/stoneytech-site/src/posts/demystify/_drafts (Demystify AI series)
+// Override either with DRAFTS_DIR. In CI, DRAFTS_DIR is set per-workflow to
+// the repo workspace's output/drafts/<register>/.
+const DEFAULT_LOCAL_DRAFTS_DIR = IS_PRIMER
+  ? join(homedir(), 'JobSearch/stoneytech-site/src/posts/demystify/_drafts')
+  : join(homedir(), 'JobSearch/stoneytech-site/src/posts/learn/_drafts');
+const DRAFTS_DIR = process.env.DRAFTS_DIR || DEFAULT_LOCAL_DRAFTS_DIR;
+
 const LEDGER_PATH = process.env.DRILL_LEDGER || join(ROOT, 'curriculum/ledger.json');
 const CURRICULUM_PATH = join(ROOT, 'curriculum/concepts.json');
 const FORCE_CONCEPT = process.env.CONCEPT;
@@ -48,14 +64,24 @@ if (FORCE_CONCEPT) {
     console.error(`Run 'npm run list' to see available concepts.`);
     process.exit(1);
   }
-  console.log(`[forced] Drilling concept: ${concept.slug}`);
+  if (!conceptMatchesRegister(concept, REGISTER)) {
+    console.error(
+      `Concept ${concept.slug} has register='${concept.register || 'architect'}' which doesn't match REGISTER='${REGISTER}'. ` +
+        `Either pick a different concept, switch REGISTER, or update the concept's register field in concepts.json.`
+    );
+    process.exit(1);
+  }
+  console.log(`[forced] Drilling concept: ${concept.slug} (register: ${REGISTER})`);
 } else {
-  concept = pickNextConcept(curriculum, ledger);
+  concept = pickNextConcept(curriculum, ledger, REGISTER);
   if (!concept) {
-    console.error('No undrilled concepts remain. Curriculum exhausted — author more in concepts.json.');
+    console.error(
+      `No undrilled concepts remain for register='${REGISTER}'. Add more in concepts.json (with register: '${REGISTER}' or 'both').`
+    );
     process.exit(0);
   }
   console.log(`[picked] Drilling concept: ${concept.slug} — ${concept.title}`);
+  console.log(`  register: ${REGISTER}`);
 }
 
 console.log(`  tier: ${concept.tier}`);
@@ -63,15 +89,19 @@ console.log(`  lever: ${concept.lever}`);
 console.log(`  anchor axiom: #${concept.anchor_axiom}`);
 console.log(`  prerequisites: ${concept.prerequisites.length || 'none'}`);
 console.log('');
+
+const systemPrompt = IS_PRIMER ? PRIMER_SYSTEM_PROMPT : SYSTEM_PROMPT;
+const userPrompt = IS_PRIMER ? buildPrimerUserPrompt(concept, today) : buildUserPrompt(concept, today);
+
 if (DRY_RUN_NO_API) {
-  console.log('[dry-run, skip-api] Picker + prompt assembly verified. Stopping before API call.');
+  console.log(`[dry-run, skip-api] Picker + prompt assembly verified (register: ${REGISTER}). Stopping before API call.`);
   console.log('');
   console.log('--- USER PROMPT PREVIEW ---');
-  console.log(buildUserPrompt(concept, today));
+  console.log(userPrompt);
   process.exit(0);
 }
 
-console.log('Calling Opus 4.7 for draft generation...');
+console.log(`Calling Opus 4.7 for ${REGISTER}-register draft generation...`);
 
 const client = new Anthropic({ apiKey: apiKey! });
 const startTime = Date.now();
@@ -79,8 +109,8 @@ const startTime = Date.now();
 const response = await client.messages.create({
   model: 'claude-opus-4-7',
   max_tokens: 8000,
-  system: SYSTEM_PROMPT,
-  messages: [{ role: 'user', content: buildUserPrompt(concept, today) }]
+  system: systemPrompt,
+  messages: [{ role: 'user', content: userPrompt }]
 });
 
 const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -101,12 +131,14 @@ if (!draftText.trim().startsWith('---')) {
   console.warn('⚠ Draft does not begin with frontmatter delimiter. Manual review required.');
 }
 
-const filename = `daily-drill-${today}-${concept.slug}.svx`;
+const filename = IS_PRIMER
+  ? `daily-primer-${today}-${concept.slug}.svx`
+  : `daily-drill-${today}-${concept.slug}.svx`;
 
 if (DRY_RUN) {
   console.log('[dry-run] Would write draft to:');
   console.log(`  ${join(DRAFTS_DIR, filename)}`);
-  console.log('[dry-run] Would append ledger entry for slug:', concept.slug);
+  console.log('[dry-run] Would append ledger entry for slug:', concept.slug, '(register:', REGISTER + ')');
   console.log('');
   console.log('--- DRAFT PREVIEW ---');
   console.log(draftText.slice(0, 800));
@@ -126,6 +158,7 @@ console.log(`✓ Draft written: ${draftPath}`);
 // Append to ledger.
 const entry: LedgerEntry = {
   slug: concept.slug,
+  register: REGISTER,
   drilled_at: today,
   draft_path: draftPath,
   status: 'draft'
@@ -134,26 +167,30 @@ const updatedLedger = { ...ledger, drills: [...ledger.drills, entry] };
 writeFileSync(LEDGER_PATH, JSON.stringify(updatedLedger, null, 2) + '\n', 'utf-8');
 console.log(`✓ Ledger updated: ${LEDGER_PATH}`);
 
-// Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking
-// — we'd rather have the draft on disk and a missed notification than vice versa.
+// Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking.
 if (process.env.NOTIFY !== '0') {
   // Try to extract the excerpt from the generated frontmatter for a richer digest.
   const excerptMatch = draftText.match(/excerpt:\s*([^\n]+)/);
   const excerpt = excerptMatch ? excerptMatch[1].replace(/^["']|["']$/g, '').trim() : '';
 
   // GitHub link if we know the repo URL (set by CI).
-  const ghRepo = process.env.GITHUB_REPOSITORY; // e.g. stoney-arch/drill-agent
+  const ghRepo = process.env.GITHUB_REPOSITORY;
   const ghBranch = process.env.GITHUB_REF_NAME || 'main';
   const draftRel = draftPath.includes('/output/drafts/')
-    ? `output/drafts/${filename}`
-    : `_drafts/${filename}`;
+    ? draftPath.slice(draftPath.indexOf('output/drafts/'))
+    : (IS_PRIMER ? `output/drafts/primer/${filename}` : `output/drafts/architect/${filename}`);
   const ghLink = ghRepo
     ? `https://github.com/${ghRepo}/blob/${ghBranch}/${draftRel}`
     : null;
 
+  const seriesEmoji = IS_PRIMER ? '📚' : '🪛';
+  const seriesLabel = IS_PRIMER ? 'Daily primer' : 'Daily drill';
+  const seriesPath = IS_PRIMER ? '/demystify' : '/learn';
+
   const lines = [
-    `🪛 <b>Daily drill — ${today}</b>`,
+    `${seriesEmoji} <b>${seriesLabel} — ${today}</b>`,
     ``,
+    `<b>Series:</b> ${IS_PRIMER ? 'Demystify AI' : 'Determinism Ladder'} (<a href="https://stoneytech.net${seriesPath}">${seriesPath}</a>)`,
     `<b>Concept:</b> ${concept.title}`,
     `<b>Lever:</b> ${concept.lever} · <b>Tier:</b> ${concept.tier} · <b>Anchor:</b> axiom #${concept.anchor_axiom}`,
     excerpt ? `\n<i>${excerpt}</i>` : ``,
@@ -166,4 +203,5 @@ if (process.env.NOTIFY !== '0') {
 }
 
 console.log('');
-console.log('Next step: review the draft, refine, then move to src/posts/learn/ and run the GVAR v3.3 panel via webhook.');
+const targetDir = IS_PRIMER ? 'src/posts/demystify/' : 'src/posts/learn/';
+console.log(`Next step: review the draft, refine, then move to ${targetDir} and run the GVAR v3.3 panel via webhook.`);
