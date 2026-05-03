@@ -66,6 +66,13 @@
       "drilled_at": "2026-05-03",
       "draft_path": "/Users/austondeville/JobSearch/stoneytech-site/src/posts/learn/_drafts/daily-drill-2026-05-03-graph-constrained-execution.svx",
       "status": "draft"
+    },
+    {
+      "slug": "deployment-context-first",
+      "register": "architect",
+      "drilled_at": "2026-05-03",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-03-deployment-context-first.svx",
+      "status": "draft"
     }
   ]
 }

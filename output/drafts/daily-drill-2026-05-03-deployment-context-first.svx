@@ -1,0 +1,113 @@
+---
+title: Deployment context is decision-zero, not the model
+date: 2026-05-03
+minutes: 9
+tags: ["axiom-18","deployment-context","data-residency","architecture"]
+excerpt: The model is the loudest decision in an AI system and almost never the consequential one — where the bytes live, who can subpoena them, and what region they replicate to is what actually shapes the build.
+verification:
+  status: pending-panel
+  panel_architecture: "GVAR v3.3 — pending first run via webhook"
+axioms_applied: [18, 7, 11]
+axiom_outcomes:
+  - n: 18
+    verdict: held
+    note: "Deployment context decided before model selection; model became a swappable component, residency did not."
+  - n: 7
+    verdict: held
+    note: "The lever pushed down was infrastructural, not parametric — model autonomy was never the bottleneck."
+  - n: 11
+    verdict: refined
+    note: "Portability claims survive only inside a residency-equivalent envelope; outside it, portability is fiction."
+---
+
+<script>
+  import Term from '$lib/components/Term.svelte';
+  import Mermaid from '$lib/components/Mermaid.svelte';
+
+  const month1Topology = `flowchart LR
+    U[Customer App] --> API[FastAPI service<br/>us-east-1]
+    API --> EMB[OpenAI embeddings]
+    API --> PC[(Pinecone Cloud<br/>default region: us-east-1)]
+    API --> LLM[GPT-4o]
+    classDef us fill:#1e3a5f,stroke:#4a90e2,color:#fff
+    class API,PC,EMB,LLM us`;
+
+  const month9Topology = `flowchart TB
+    subgraph EU[EU envelope - eu-west-1]
+      U2[EU Customer App] --> API2[FastAPI service]
+      API2 --> EMB2[Azure OpenAI<br/>Sweden Central]
+      API2 --> PC2[(pgvector on RDS<br/>eu-west-1)]
+      API2 --> LLM2[Azure OpenAI GPT-4o<br/>EU data zone]
+    end
+    subgraph US[US envelope - us-east-1]
+      U1[US Customer App] --> API1[FastAPI service]
+      API1 --> EMB1[OpenAI embeddings]
+      API1 --> PC1[(pgvector on RDS<br/>us-east-1)]
+      API1 --> LLM1[GPT-4o]
+    end
+    CTRL[Tenant router<br/>residency-aware] --> API1
+    CTRL --> API2`;
+</script>
+
+## The DPA that ate nine months
+
+Picture a Series-B vertical SaaS — call them Lattice — that shipped a retrieval-augmented copilot in eight weeks. The team picked <Term term="pinecone">Pinecone</Term> in week one because the SDK was clean and the free tier was generous. Default region. Nobody fought about it. The product worked, customers loved it, and the founders started selling into Europe.
+
+Month nine, a German manufacturer's procurement team sent over a <Term term="dpa">DPA</Term> with a hard residency clause: no customer-derived embeddings could leave the EU, full stop. The contract was worth more than the entire previous quarter. The eng lead spent six weeks ripping out Pinecone, standing up <Term term="pgvector">pgvector</Term> on EU-region <Term term="rds">RDS</Term>, re-embedding three corpora through <Term term="azure-openai">Azure OpenAI</Term> in Sweden Central, and writing a tenant router that nobody had budgeted.
+
+The model never changed. The model was never the problem.
+
+## The building, not the tenant
+
+Think of an AI system the way you think of a company's office. The model is the team you hire — smart, swappable, replaceable next quarter. The deployment context is the building: which country it sits in, which fire code applies, which government can walk in with a warrant, which utility company controls the power, which landlord can evict you.
+
+You can fire a team in two weeks. You cannot relocate a building in two weeks. Every founder who's been through a residency migration learns this in the same order: pick the building first, then staff it.
+
+## What "deployment context" actually names
+
+Deployment context is the full set of constraints imposed by where your system runs and whose jurisdiction the bytes pass through. It is decided — implicitly or explicitly — at the moment you provision your first piece of stateful infrastructure. The pieces:
+
+- **Data residency**: physical region of every store that holds customer data, derived data, embeddings, logs, and prompt traces.
+- **Jurisdiction**: which legal regime governs disclosure, subpoena, and lawful intercept (<Term term="cloud-act">CLOUD Act</Term>, <Term term="gdpr">GDPR</Term>, <Term term="schrems-ii">Schrems II</Term>, sectoral rules like <Term term="hipaa">HIPAA</Term>).
+- **Tenancy model**: shared multi-tenant, pooled-with-isolation, or single-tenant per customer.
+- **Network egress posture**: which outbound calls cross which borders, and whether the customer's auditor will accept it.
+- **Inference plane**: who hosts the model weights, who logs the prompts, and what their retention policy is.
+- **Control plane vs. data plane separation**: whether your orchestration metadata can live in one region while customer payloads live in another.
+
+These six form a lattice. Change any one and the others ripple.
+
+## Where this comes from — the deployment-first literature
+
+The formal observation isn't new. It traces back to <Term term="conway-law">Conway's law</Term> generalized: your system's topology mirrors the constraint graph it was provisioned under. <Term term="fowler-evolutionary-architecture">Evolutionary architecture</Term> ([Ford, Parsons & Kua, 2017](https://www.thoughtworks.com/en-us/insights/books/building-evolutionary-architectures)) names "fitness functions" — automated tests for architectural properties — and residency is the canonical example of one that is cheap on day one and ruinous on day three hundred.
+
+Formally, let $D$ be the set of data-handling components and $R(d)$ the residency region of component $d \in D$. A residency-valid deployment requires:
+
+$$\forall d_i, d_j \in D : \text{flow}(d_i \to d_j) \implies R(d_j) \in \text{Permitted}(R(d_i), \text{tenant})$$
+
+Migration cost scales with $|D|$ and the depth of the <Term term="dag">DAG</Term> of dependencies between them. Lattice's $|D|$ at month nine was 14.
+
+## Friction is the point — push the constraint down the stack
+
+Axiom 18 says: choose deployment context before you choose anything else, because every other lever in the <Term term="determinism-ladder">determinism ladder</Term> assumes deployment is fixed. The model is a parameter. <Term term="lora">LoRA</Term> adapters are a parameter. <Term term="rag">RAG</Term> indexes are a parameter. The building is not.
+
+The trade-off is real and worth naming. Picking deployment context first means slower week-one velocity. You will run a residency-discovery call with sales before you provision a vector store. You will pick <Term term="pgvector">pgvector</Term> over <Term term="pinecone">Pinecone</Term> not because it's better but because it deploys into any region you can spin up Postgres in. You will say no to a managed inference provider whose only region is `us-east-1`. You give up sugar to gain optionality.
+
+The reward is that every later lever — model swap, prompt change, skill addition, MCP server, agent topology — becomes a local decision. Local decisions are cheap. Building moves are not.
+
+<Mermaid code={month1Topology} caption="Lattice month 1: single envelope, all dependencies in us-east-1. Velocity high, optionality zero." />
+
+<Mermaid code={month9Topology} caption="Lattice month 9 after the EU DPA: two envelopes, residency-aware tenant router, duplicated state. The architecture the team should have shipped in week one." />
+
+## What Lattice actually paid
+
+The migration ran six weeks of senior eng time, plus three weeks of customer-success holding the German account's hand through delayed onboarding. Two engineers quit during it — not because of the work, but because the founder kept asking why this hadn't been considered earlier and nobody had a clean answer. The Pinecone contract had eight months left and was non-refundable. Re-embedding the corpora cost $11k in API calls because the original embedding model had been deprecated and the new region's <Term term="azure-openai">Azure OpenAI</Term> deployment didn't host the legacy version. The backfill required a custom dual-write proxy that lived in production for four months before it could be deleted.
+
+The total burdened cost was somewhere north of $400k. The week-one decision that would have prevented it — "let's stand up pgvector in whatever region the tenant lives in, and put a residency field on the tenant table" — would have cost a single afternoon.
+
+## Try this in an afternoon
+
+Take your current side project or a fresh repo. Add a `tenant` table with a `residency_region` column. Add an environment-keyed config that maps region → vector store endpoint, embedding endpoint, and inference endpoint. Wire your retrieval call so that the tenant's region selects the entire downstream stack. Now provision two regions, even if one is empty. You have just paid the architecture tax once. You will never pay the migration tax.
+
+## Where deployment sits on the ladder
+
+Deployment context is decision-zero because it constrains every other lever above it. You cannot push work down the determinism ladder past a building you cannot move. The agentic stack — model, API, LoRA, RAG, skills, MCP, agents — assumes a substrate. Pick the substrate consciously, in week one, with sales and legal in the room. Everything above it gets cheaper, faster, more swappable. Everything above an unconscious substrate gets re-litigated the first time a customer's DPA hits the inbox.
