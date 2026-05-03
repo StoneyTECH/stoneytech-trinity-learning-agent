@@ -1,0 +1,99 @@
+---
+title: "How do you know your AI thing is actually working — eval in 600 words"
+date: 2026-05-03
+minutes: 9
+tags: ["demystify","primer","eval","observability"]
+series: "demystify"
+audience: "technical-generalist"
+excerpt: "Most AI rollouts have no honest answer to 'is this working?' Here's the mental model, the failure mode that costs you six months, and what to put on the dashboard Monday."
+verification:
+  status: pending-panel
+  panel_architecture: "GVAR v3.3 — pending first run via webhook"
+axioms_applied: [5, 2]
+axiom_outcomes:
+  - n: 5
+    verdict: held
+    note: "Anchor — eval is the only thing that distinguishes a working AI feature from a confidently-wrong one. Held throughout."
+  - n: 2
+    verdict: held
+    note: "The looseness of the LLM-as-database means silent drift is the default, not the exception. Reinforces why eval is non-optional."
+---
+
+<script>
+  import Term from '$lib/components/Term.svelte';
+  import Mermaid from '$lib/components/Mermaid.svelte';
+  const evalLoop = `flowchart LR\n  A[Real user input] --> B[AI system]\n  B --> C[Output]\n  C --> D{Did it help?}\n  D -->|recorded| E[(Eval set)]\n  E --> F[Score over time]\n  F -.regression?.-> B`;
+</script>
+
+## The internal bot nobody wanted to look at
+
+Picture a status meeting at the end of Q2. The IT director pulls up the dashboard for the help-desk assistant her team rolled out last fall — the one that triages password resets, VPN tickets, and "my Outlook is broken again." Usage is up. Cost is steady. Everyone nods. Then someone from the service desk mentions, almost in passing, that ticket escalations have been climbing for about five months and nobody can quite say why.
+
+She pulls the logs that afternoon. The bot is still answering. It's just that somewhere around February it started confidently telling people to clear their browser cache for problems that have nothing to do with browsers. No alarm fired. No metric dipped. The thing was working — until you asked it the only question that matters.
+
+That gap, between "the system is up" and "the system is helping," is what evaluation exists to close. And most teams running AI features today don't have a real answer to it.
+
+## The dashboard you already have is lying to you a little
+
+If you run any production system, you already have a mental model for "is it working?" Latency, error rate, throughput, uptime. Those four numbers, watched over time, will tell you when a database is sick or a web service is wobbling. It's a good mental model. Borrow it. For an AI feature, ask the same four questions plus one more:
+
+- Is it responding? (uptime)
+- Is it responding fast enough? (latency)
+- Is it responding without crashing? (error rate)
+- How many people are using it? (throughput)
+- **Is the response any good?** (quality)
+
+That fifth question is the whole game. The first four are necessary and your existing observability stack already covers them. The fifth one is the one your existing stack cannot answer, and it's the one that decides whether the feature is helping the business or quietly burning trust.
+
+## "Any good" doesn't mean what you think it means
+
+Here's the refinement. "Is the response any good?" sounds subjective, and people treat it like it's unmeasurable, so they don't measure it. That's the mistake. You don't need a perfect quality score. You need a *consistent* quality score — something you compute the same way every week so that when it drops, you notice.
+
+The working definition: an <Term term="eval">eval</Term> is a fixed set of inputs paired with a way to judge each output. The inputs don't change. The judging method doesn't change. What changes is the model, the prompt, the retrieved documents, the vendor's silent backend update — and the score moves in response. The score itself doesn't have to be 100% accurate. It has to be *the same kind of wrong* every time, so deltas mean something.
+
+## The looseness is exactly why you need this
+
+Earlier in this series we framed an <Term term="llm">LLM</Term> as a [loose database](/learn/2026-04-26-llms-as-a-loose-database) — one that retrieves plausible-sounding answers rather than exact rows. That looseness is the feature. It's what lets the model handle "my Outlook is broken again" alongside seventeen other phrasings of the same complaint. It's also why traditional monitoring is blind to AI failures.
+
+A SQL query that returns wrong rows throws no error — but the rows are wrong in a way you can spot by looking. An LLM that returns wrong advice throws no error *and* the advice looks fluent and confident. There is no stack trace for "this answer was unhelpful." The only signal is whether someone, somewhere, evaluated it. If you don't build that signal, you don't have one.
+
+<Mermaid code={evalLoop} caption="The minimum viable eval loop. The dotted line is the part most teams skip." />
+
+## What's actually happening when you "run an eval"
+
+Three flavors, in order of how much work they cost:
+
+**Reference-based.** You have known-good answers. The eval scores how close the model's output is to the reference. Good for FAQ-style bots, classification, anything with a defensible right answer.
+
+**Rubric-based.** You don't have a reference, but you have criteria — "did it cite a real KB article," "did it avoid promising a refund," "did it escalate when it should have." A human or a second model checks each output against the rubric. This is where most internal-tool evals live in practice.
+
+**User-signal-based.** Thumbs-up/thumbs-down, escalation rate, time-to-resolution, "did the user come back and ask the same thing again three minutes later." Cheap, noisy, and lagging — but real, because it's measured on actual traffic.
+
+You want at least two of the three running at once. The reference-and-rubric evals catch regressions before they ship. The user-signal eval catches the regressions you didn't know to write a rubric for.
+
+## How this fails in the wild
+
+The IT director's bot drifted because the upstream model was silently updated and nobody had a fixed test set to notice. That's the most common failure: **silent provider-side drift**. You spot it by re-running the same eval set this week that you ran last week and watching the score, not by reading release notes.
+
+The second-most-common failure: **the eval set goes stale**. Real user questions have shifted, but your eval is still scoring the bot on last year's questions. You spot it by sampling fresh production traffic every month and asking whether your eval set still resembles it.
+
+The third: **the eval grades the wrong thing**. You measured fluency, but users care about accuracy. You measured accuracy, but users care about whether the bot escalated to a human fast enough. You spot it by watching whether the eval score and the user-signal score move together. When they diverge, the eval is grading something users don't care about.
+
+If you're running an AI feature touching a security-sensitive surface — agents acting on user behalf, tools with side effects, anything reaching production data — eval alone is not enough. The architect-register treatment of [deployment-context-first](/learn/2026-05-11-deployment-context-first) covers what to add on top.
+
+## Five things to do Monday morning
+
+1. **Pick 50 real questions** from the last 30 days of usage. Not synthetic ones. Real ones, copy-pasted. That's your eval set, version 1.
+2. **Score them once, by hand or rubric.** Write down the score. This is your baseline.
+3. **Re-run the same 50 questions on a fixed schedule** — weekly is plenty. Plot the score over time. That line is the only graph that matters.
+4. **Add a thumbs-up/thumbs-down** to whatever the user touches. Log it. Compare against your eval score monthly.
+5. **Refresh the eval set quarterly** with new real questions. The set should drift to match how users actually use the thing.
+
+Six hundred words of eval discipline beats six months of silent drift. Pick the 50 questions today.
+
+## Worth reading next
+
+- [Evaluating Large Language Models: A Comprehensive Survey](https://arxiv.org/abs/2310.19736) — the rigorous landscape view, if you want to see how the research community thinks about this.
+- [Your AI Product Needs Evals](https://hamel.dev/blog/posts/evals/) by Hamel Husain — the accessible, opinionated, practitioner version. Read this one first if you only read one.
+
+*Next in the [Demystify AI](/demystify) series: prompt injection without the FUD — what it actually is, and why your help-desk bot is a softer target than you think.*

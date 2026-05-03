@@ -73,6 +73,13 @@
       "drilled_at": "2026-05-03",
       "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-03-deployment-context-first.svx",
       "status": "draft"
+    },
+    {
+      "slug": "how-do-you-know-its-working",
+      "register": "primer",
+      "drilled_at": "2026-05-03",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/primer/daily-primer-2026-05-03-how-do-you-know-its-working.svx",
+      "status": "draft"
     }
   ]
 }
