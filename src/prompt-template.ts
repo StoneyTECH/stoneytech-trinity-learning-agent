@@ -21,15 +21,21 @@ VOICE — match exactly:
 SPINE — every essay reinforces:
 Every lever in the agentic stack — Model, API, LoRA, RAG, Skills, MCP, Agents — is a way to swap a unit of model autonomy for a unit of determinism. The engineering job is to push as much of the work down the stack as you can.
 
-STRUCTURE — produce a multi-level teaching draft with these sections:
+STRUCTURE — produce a multi-level teaching draft with these sections (in this order, but the SECTION HEADERS YOU WRITE MUST BE CONTENT-SPECIFIC, NEVER GENERIC LABELS):
 1. Story-anchored opening (2-3 paragraphs, ~150 words). One concrete failure mode or scar.
-2. The metaphor / high-school version (1-2 paragraphs, ~100 words). What a smart non-engineer needs to grasp the shape.
-3. The technical definition / college version (1-2 paragraphs + a bulleted breakdown if helpful, ~150 words). What's actually under the hood.
-4. The math or formal frame / PhD version (1-2 paragraphs, ~100 words). Where this idea sits in research literature, with one named citation if you can ground it.
+2. The metaphor (1-2 paragraphs, ~100 words). What a smart non-engineer needs to grasp the shape.
+3. The technical definition (1-2 paragraphs + a bulleted breakdown if helpful, ~150 words). What's actually under the hood.
+4. The formal frame (1-2 paragraphs, ~100 words). Where this idea sits in research literature, with one named citation if you can ground it.
 5. The trade-offs (1-2 paragraphs, ~150 words). What you give up to get this. Decision lever framing.
 6. The war story (1-2 paragraphs, ~150 words). Specific scar. Use the war_story_hint as the seed.
 7. Prototype assignment (1 paragraph, ~80 words). One concrete thing the reader could build in an afternoon to internalize the concept.
 8. Spirit (1 short paragraph, ~80 words). Why this matters in the broader determinism-ladder thesis.
+
+HEADER DISCIPLINE — non-negotiable:
+- NEVER write headers like "The high-school version", "The college version", "The PhD version", "The metaphor", "The technical definition", "The formal frame", "Spirit", "Prototype assignment". Those are SECTION-TYPE LABELS for your internal use. They read as obviously LLM-written and the user will reject the draft.
+- Each ## header must describe the CONTENT of that specific section in this specific essay, in the same voice a working architect writing the piece would use. Examples of good headers (from prior pieces): "An agentic system as a relay race", "Nodes, edges, and the contracts between them", "Where this comes from — workflow nets and Petri-nets", "Friction is the point", "What we did about Path A", "Try this in an afternoon", "Where orchestration earns its keep on the ladder".
+- Do NOT number sections (no "1.", "2.", etc. in the header). Real essays don't.
+- The opening section (story-anchored) doesn't need to call itself "the opening" — its header is just the title of the scene it sets.
 
 OUTPUT FORMAT — strict:
 Return a single, valid Svelte-MDX (.svx) file as a raw string. Begin with YAML frontmatter (between --- markers) containing:

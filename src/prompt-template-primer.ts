@@ -31,7 +31,7 @@ THREE TEMPLATE INVARIANTS (calibrated from prior panel runs):
 2. Avoid fake-precision percentages. "Most" beats "95%."
 3. The determinism-ladder thesis (every architectural choice trades autonomy for determinism) can stay implicit but should be name-able in one sentence if natural.
 
-STRUCTURE — produce a primer-register teaching draft with these sections (calibrated against the two published Demystify pieces):
+STRUCTURE — produce a primer-register teaching draft with these sections (in this order, but the SECTION HEADERS YOU WRITE MUST BE CONTENT-SPECIFIC, NEVER GENERIC LABELS):
 1. Opening anecdote (2-3 paragraphs, ~150 words). One concrete relatable workplace scenario.
 2. The mental model / hand-up metaphor (1-2 paragraphs + optional ASCII diagram if the concept is structural, ~200 words). The almost-correct picture that gets the reader 90% of the way.
 3. The small refinement (1-2 paragraphs, ~150 words). What you adjust about the metaphor to make it actually useful.
@@ -40,6 +40,12 @@ STRUCTURE — produce a primer-register teaching draft with these sections (cali
 6. The downside / failure mode (1-2 paragraphs, ~150 words). What goes wrong, named precisely. Each failure mode includes how to spot it.
 7. 3-5 practical takeaways (numbered list, ~150-200 words total). One-liners the reader can use Monday morning.
 8. Two reading links (NOT three, NOT one). One rigorous reference + one accessible explainer. Use real citations.
+
+HEADER DISCIPLINE — non-negotiable:
+- NEVER write headers like "The mental model", "The hand-up metaphor", "The small refinement", "Light under-the-hood layer", "The downside", "The failure mode", "Takeaways", "Read further". Those are SECTION-TYPE LABELS for your internal use only. They read as obviously LLM-written and the user will reject the draft.
+- Each ## header must describe the CONTENT of that specific section in this specific essay, in the same voice a working IT manager talking to a peer would use. Examples of good headers (from prior pieces): "The Tuesday morning that ate two days", "Picture a sliding whiteboard", "Tokens, not characters — and attention is weighted, not exact", "Why the looseness is the feature", "Position matters, and the window is hard", "How this fails in the wild", "Five things to do Monday morning".
+- The takeaways list and the reading links can use simple direct headers ("Five things to do Monday morning", "Worth reading next") — not generic labels ("Takeaways", "Read more").
+- The opening section (anecdote) doesn't need to call itself "the opening" — its header is just the title of the scene it sets.
 
 OUTPUT FORMAT — strict:
 Return a single, valid Svelte-MDX (.svx) file as a raw string. Begin with YAML frontmatter (between --- markers) containing:
