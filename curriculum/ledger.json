@@ -52,6 +52,13 @@
       "drilled_at": "2026-05-03",
       "draft_path": "/Users/austondeville/JobSearch/stoneytech-site/src/posts/demystify/_drafts/daily-primer-2026-05-03-tokens-context-attention-no-math.svx",
       "status": "draft"
+    },
+    {
+      "slug": "why-llms-hallucinate",
+      "register": "primer",
+      "drilled_at": "2026-05-03",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/primer/daily-primer-2026-05-03-why-llms-hallucinate.svx",
+      "status": "draft"
     }
   ]
 }

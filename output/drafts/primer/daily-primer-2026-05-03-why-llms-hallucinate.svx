@@ -1,0 +1,101 @@
+---
+title: "Why LLMs hallucinate — same mechanism as the looseness, different consequence"
+date: 2026-05-03
+minutes: 9
+tags: ["demystify","primer","hallucination","reliability","mental-models"]
+series: "demystify"
+audience: "technical-generalist"
+excerpt: "Hallucination isn't a bug bolted onto an otherwise reliable system — it's the same retrieval looseness that makes LLMs useful, wearing a different hat."
+verification:
+  status: pending-panel
+  panel_architecture: "GVAR v3.3 — pending first run via webhook"
+axioms_applied: [11, 7]
+axiom_outcomes:
+  - n: 11
+    verdict: held
+    note: "Hallucination framed as the cost-side of the same retrieval mechanism that produces usefulness."
+  - n: 7
+    verdict: held
+    note: "Surface fluency is uncorrelated with factual grounding; the model has no separate truth channel."
+---
+
+## The brief that made it to filing
+
+A friend who runs IT for a mid-size firm told me about the week his legal team almost lost a partner. Associate drafts a motion, uses the in-house chatbot to "find supporting case law," gets back three citations with case names, court, year, and a one-sentence summary of each. They look right. They read right. They get pasted into the brief.
+
+Two of the three cases do not exist. The third exists but says the opposite of what the summary claims. The opposing counsel's paralegal catches it in twenty minutes.
+
+What everyone wanted to know — partners, associates, the IT director who got the angry phone call — was the same question: *how does a tool this good produce something this bad without flinching?* No error message. No hedge. No "I'm not sure." Just three fluent, plausible, completely fabricated citations sitting next to two real ones.
+
+## The hand-up metaphor
+
+If you read the earlier piece on [LLMs as a loose database](/demystify), you already have most of the picture. The model is not looking anything up. It is generating each next word based on what *patterns of words like this one* tend to do. Citations are a pattern. "Smith v. Jones, 412 F.3d 891 (9th Cir. 2005)" is a *shape* — plaintiff v. defendant, volume number, reporter, court, year. The model has seen tens of thousands of these. It knows the shape cold.
+
+So when you ask for case law on a topic, the model does what it always does: it produces text that fits the shape of the answer. Plausible plaintiff. Plausible volume number. Plausible court for the jurisdiction. Plausible year. Plausible one-line summary in the register of legal headnotes.
+
+```
+Your prompt:  "cases on negligent retention in California"
+                          │
+                          ▼
+            ┌─────────────────────────────┐
+            │  Pattern: legal citation    │
+            │  Pattern: CA jurisdiction   │
+            │  Pattern: negligence verb   │
+            └─────────────┬───────────────┘
+                          ▼
+              "Garcia v. Pacific Logistics,
+               203 Cal.App.4th 411 (2012)"
+                          │
+              shape: ✓   existence: ?
+```
+
+The shape is correct. Whether the case actually exists is a separate question the model never asked.
+
+## The small refinement
+
+The refinement is this: there is no separate "fact-check" step inside the model. There is only one mechanism, generating one token at a time, and that mechanism does not distinguish between *recalling* and *confabulating*. From the model's perspective, both feel the same — they are both just "the next plausible token."
+
+When the training data contained the real Smith v. Jones case thousands of times, the model's pattern-pull leans hard toward the real volume number and year. When it didn't — when you asked about a niche jurisdiction or an obscure topic — the pattern-pull is weaker, but the *shape generator still runs*. It will fill in a volume number that fits. It will fill in a year that fits. The output looks identical either way.
+
+This is the part most people miss. Hallucination isn't the model "making things up" as a separate behavior. It's the model doing exactly what it always does, in a region of the space where the training data was thin.
+
+## Why the imperfection is the feature
+
+Here is the pedagogically important move, and it is the thing to actually take home: *the same mechanism that makes the model useful is the mechanism that makes it hallucinate.*
+
+The looseness is what lets the model rephrase your messy prompt, summarize a document it has never seen before, generalize from "how to write a Python decorator" to "how to write a TypeScript decorator." If you bolted a strict "only emit tokens you can verify against ground truth" guardrail onto the model, you would not get a more honest assistant. You would get a much, much worse one — one that couldn't paraphrase, couldn't generalize, couldn't help you with anything novel.
+
+Hallucination and helpfulness come out of the same pipe. You don't get to keep one and lose the other by tuning a knob. This is why "just make it stop hallucinating" is not a roadmap item — it's a category error.
+
+## One layer deeper
+
+There's one mechanical detail worth knowing. When the model is generating, at each step it is sampling from a probability distribution over possible next tokens. In a region with strong training support, that distribution is sharply peaked — one or two tokens are wildly more likely than the rest, and the model picks one of those. In a region with weak training support, the distribution is *flat* — many tokens are roughly equally likely, and the model picks one anyway, because there is no "abstain" token in the vocabulary.
+
+The model has no internal signal that says "I'm in a flat-distribution region right now, you should not trust this." It just emits the token. Modern systems try to estimate this externally — confidence scoring, retrieval-augmented generation, tool-use to ground specific claims — but none of those are *the model itself* knowing it's guessing. They are scaffolding bolted on around it.
+
+This is why fluency is such a poor signal for accuracy. A confident, well-formed sentence costs the model the same as a hesitant one. There is no internal cringe.
+
+## How it goes wrong, and how to spot it
+
+Two failure modes show up over and over.
+
+**The plausible-shape fabrication.** Citations, API method names, RFC numbers, library functions, statistics, historical dates. Anything with a recognizable structure where the *shape* is well-trained but the *specific instance* may not be. Spot it by: any time the model produces a precise identifier (number, name, URL, citation), treat it as a hypothesis until you've checked it in a system of record.
+
+**The confidently wrong synthesis.** The model takes two real things and connects them in a way that sounds reasonable but isn't true. "Drug X is contraindicated with drug Y" — both drugs real, contraindication invented. Spot it by: when the model is reasoning *across* facts rather than reciting them, the join is the weak point, not the endpoints.
+
+## Takeaways
+
+1. **Treat any specific identifier as a hypothesis.** Names, numbers, URLs, citations, version strings, function signatures — verify before you ship.
+2. **Fluency is not a confidence signal.** The model sounds equally sure when recalling and when confabulating. Read style as style only.
+3. **Topic obscurity raises hallucination rate.** If the answer requires niche knowledge, assume thinner training support and verify harder.
+4. **Cross-claim joins are the weakest point.** When the model reasons across two facts, the connection is more likely to be invented than the facts themselves.
+5. **Don't ask the model "are you sure?"** It will produce the shape of a confidence answer, with no more grounding than the original. Verify externally, against a source of truth.
+
+## Read more
+
+- *Lin, Hilton, Evans — "TruthfulQA: Measuring How Models Mimic Human Falsehoods"* (ACL 2022). The rigorous reference: a benchmark designed specifically around the failure mode this piece describes, with the data to show why scaling alone doesn't fix it.
+- *Simon Willison — "Hallucinations in code are the least dangerous form"* (blog, March 2025). The accessible explainer: a working developer's framing of why some hallucination domains have natural verifiers and others don't, with practical implications for where to deploy LLMs.
+
+---
+
+*Next in the [Demystify AI](/demystify) series: **temperature, sampling, and why the same prompt gives different answers** — pulling apart the dial that everyone touches and almost no one understands.*
