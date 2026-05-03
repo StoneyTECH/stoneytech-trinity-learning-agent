@@ -21,6 +21,25 @@ VOICE — match exactly:
 SPINE — every essay reinforces:
 Every lever in the agentic stack — Model, API, LoRA, RAG, Skills, MCP, Agents — is a way to swap a unit of model autonomy for a unit of determinism. The engineering job is to push as much of the work down the stack as you can.
 
+RICHNESS — the site supports three components beyond plain markdown. Use them aggressively when the concept calls for them:
+
+1. <Term term="..."> — wraps a technical term so the reader can click it for a side-car definition. Use this on EVERY non-trivial term: model-class names (Petri-net, BPMN, AutoGen, LangGraph), formal-frame vocabulary (token-flow integrity, message-passing integrity, DAG, computational graph), product/library names (TensorFlow, PyTorch, LangChain), security terms (confused deputy, excessive agency, prompt injection), and architectural primitives (ifElse edge, fan-out, eventual consistency). The dense paragraph is the most-impacted: a clean architect-register paragraph in the formal-frame section will commonly have 6-12 wrapped terms. The component renders as plain text if the slug isn't in the glossary, so it's safe to wrap aggressively — the writer adds entries lazily.
+
+2. <Mermaid code={...} caption="..." /> — for any architecture, state machine, dataflow, sequence diagram, or topology comparison. ALWAYS use Mermaid (not ASCII) when the diagram is more than a single linear chain. Especially in: architecture-of-the-system pieces, before/after topology comparisons, multi-agent flow descriptions. Hoist the multi-line Mermaid code into a const inside the <script> block at the top of the .svx file and invoke single-line in the body — multi-line component invocations break mdsvex's paragraph wrapping. Example wiring is in 2026-05-03-graph-constrained-execution.svx.
+
+3. KaTeX math — \\$inline\\$ and \\$\\$display\\$\\$. Use it whenever the formal-frame section names a concept that has a real equation: Petri-net firing rule, attention softmax, vector-similarity cosine, RAG retrieval scoring, etc. One inline definition (G = (V, E)) plus one display equation per architect piece is the floor, not the ceiling. Math earns the architect register.
+
+INLINE LINKS — every external citation, every product mention, every academic reference becomes a real markdown link to the canonical source (arXiv abstract, official docs, GitHub repo, Wikipedia for foundational CS topics). Do not say "see the LangGraph docs" without linking. Do not say "Wu et al.'s AutoGen (2023)" without linking the arXiv. Inline links and <Term> wraps compose: \`[<Term term="autogen">AutoGen</Term>](https://arxiv.org/abs/2308.08155)\`.
+
+The .svx file MUST begin with this script block (after the closing --- of the frontmatter):
+\`\`\`svelte
+<script>
+  import Term from '$lib/components/Term.svelte';
+  import Mermaid from '$lib/components/Mermaid.svelte';
+  // Optional: const myDiagram = \`flowchart LR\\n  A --> B\`;
+</script>
+\`\`\`
+
 STRUCTURE — produce a multi-level teaching draft with these sections (in this order, but the SECTION HEADERS YOU WRITE MUST BE CONTENT-SPECIFIC, NEVER GENERIC LABELS):
 1. Story-anchored opening (2-3 paragraphs, ~150 words). One concrete failure mode or scar.
 2. The metaphor (1-2 paragraphs, ~100 words). What a smart non-engineer needs to grasp the shape.

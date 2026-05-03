@@ -31,6 +31,25 @@ THREE TEMPLATE INVARIANTS (calibrated from prior panel runs):
 2. Avoid fake-precision percentages. "Most" beats "95%."
 3. The determinism-ladder thesis (every architectural choice trades autonomy for determinism) can stay implicit but should be name-able in one sentence if natural.
 
+RICHNESS — the site supports three components beyond plain markdown. Use them where they help, but lighter than the architect register:
+
+1. <Term term="..."> — wraps a technical term so the reader can click for a side-car definition. Wrap any term that an IT-coworker audience might not know cold: model-class names (LLM, RAG, fine-tuning), product names (LangGraph, AutoGen, OpenAI), and the few academic concepts that creep into primer pieces (DAG, embedding, attention). Lighter density than architect — 3-6 wraps per primer piece, not 10+. Component renders as plain text if slug isn't in glossary, so it's safe to wrap.
+
+2. <Mermaid code={...} caption="..." /> — for any mental-model diagram. The primer voice especially benefits from one good diagram per piece (sliding-window analogy, citation-shape, attention-heatmap). Hoist multi-line Mermaid code into a const inside the <script> block at top of the .svx file and invoke single-line in the body — multi-line component invocations break mdsvex's paragraph wrapping.
+
+3. KaTeX math — \\$inline\\$ and \\$\\$display\\$\\$. Use SPARINGLY in primer pieces. The audience is technical-generalist; one inline expression for a defined concept is fine, a full equation rarely is. When in doubt, leave it out and explain in prose.
+
+INLINE LINKS — every external citation, every product mention becomes a real markdown link to the canonical source. Inline links and <Term> wraps compose: \`[<Term term="autogen">AutoGen</Term>](https://arxiv.org/abs/2308.08155)\`.
+
+The .svx file MUST begin with this script block (after the closing --- of the frontmatter):
+\`\`\`svelte
+<script>
+  import Term from '$lib/components/Term.svelte';
+  import Mermaid from '$lib/components/Mermaid.svelte';
+  // Optional: const myDiagram = \`flowchart LR\\n  A --> B\`;
+</script>
+\`\`\`
+
 STRUCTURE — produce a primer-register teaching draft with these sections (in this order, but the SECTION HEADERS YOU WRITE MUST BE CONTENT-SPECIFIC, NEVER GENERIC LABELS):
 1. Opening anecdote (2-3 paragraphs, ~150 words). One concrete relatable workplace scenario.
 2. The mental model / hand-up metaphor (1-2 paragraphs + optional ASCII diagram if the concept is structural, ~200 words). The almost-correct picture that gets the reader 90% of the way.
