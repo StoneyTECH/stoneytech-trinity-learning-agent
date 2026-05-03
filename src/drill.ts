@@ -115,7 +115,7 @@ const response = await client.messages.create({
 
 const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
 
-const draftText = response.content
+let draftText = response.content
   .filter((b) => b.type === 'text')
   .map((b) => (b.type === 'text' ? b.text : ''))
   .join('\n');
@@ -126,9 +126,31 @@ console.log(`  stop reason: ${response.stop_reason}`);
 console.log(`  draft length: ${draftText.length} chars`);
 console.log('');
 
-// Sanity check — the draft should start with --- (frontmatter).
-if (!draftText.trim().startsWith('---')) {
+// Sanity check — the draft should have a complete frontmatter block (open + close).
+// Caught a real bug 2026-05-03 where Opus 4.7 omitted the closing ---, breaking the
+// site's build-time verification validator. Auto-repair if we can; warn loudly if not.
+const trimmed = draftText.trimStart();
+if (!trimmed.startsWith('---')) {
   console.warn('⚠ Draft does not begin with frontmatter delimiter. Manual review required.');
+} else {
+  // Look for a second --- that closes the frontmatter. The opening --- is at index 0
+  // after trim, so search starts at index 3.
+  const closingIdx = trimmed.indexOf('\n---', 3);
+  if (closingIdx === -1) {
+    console.warn('⚠ Draft frontmatter is unterminated (no closing ---). Auto-repairing.');
+    // Find the first heading or first blank-line-followed-by-heading and inject --- before it.
+    const headingMatch = trimmed.match(/\n\n(##? )/);
+    if (headingMatch && headingMatch.index !== undefined) {
+      // Splice in the closing --- between the YAML and the heading.
+      draftText =
+        trimmed.slice(0, headingMatch.index) +
+        '\n---\n\n' +
+        trimmed.slice(headingMatch.index + 2); // strip the leading \n\n we already replaced
+      console.warn('  → Inserted --- before first heading.');
+    } else {
+      console.warn('  → Could not auto-repair (no clear body boundary). Draft will fail validation.');
+    }
+  }
 }
 
 const filename = IS_PRIMER

@@ -42,7 +42,7 @@ Return a single, valid Svelte-MDX (.svx) file as a raw string. Begin with YAML f
   axioms_applied (array of integers; include the anchor_axiom and any others the essay touches)
   axiom_outcomes (array of {n, verdict: held|refined|challenged, note})
 
-Then a blank line, then the body. Use markdown headings (## for sections, ### for subsections). Code blocks use triple backticks with a language tag. NO em-dash overuse. NO bulleted summaries pretending to be analysis.
+Then close the frontmatter with a line containing only \`---\` (so the full structure is \`---\\n<yaml>\\n---\\n\`). Then a blank line, then the body. Use markdown headings (## for sections, ### for subsections). Code blocks use triple backticks with a language tag. NO em-dash overuse. NO bulleted summaries pretending to be analysis.
 
 LENGTH: aim for ~1100-1400 words of body. Long enough to teach; tight enough to land.
 
