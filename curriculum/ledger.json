@@ -80,6 +80,13 @@
       "drilled_at": "2026-05-03",
       "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/primer/daily-primer-2026-05-03-how-do-you-know-its-working.svx",
       "status": "draft"
+    },
+    {
+      "slug": "smallest-lever-wins",
+      "register": "architect",
+      "drilled_at": "2026-05-04",
+      "draft_path": "/home/runner/work/drill-agent/drill-agent/output/drafts/daily-drill-2026-05-04-smallest-lever-wins.svx",
+      "status": "draft"
     }
   ]
 }
