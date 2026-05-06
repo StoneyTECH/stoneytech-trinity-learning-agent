@@ -223,6 +223,35 @@ npm run grade <slug> <0-5> [notes...]
 
 By default, learning drafts go to `~/stoneytech-site/src/posts/learn/_drafts/` and study state lives in `curriculum/study-ledger.json`.
 
+## Demo paths
+
+Standalone demo, no model key required:
+
+```bash
+npm run demo
+```
+
+Write a draft or gold teaching artifact from a bounded evidence brief:
+
+```bash
+npm run demo -- --mode draft --output ./demo/draft.md
+npm run demo -- --mode gold --output ./demo/gold.md
+```
+
+Local MCP demo:
+
+```bash
+npm run mcp:demo
+```
+
+Pair and Trinity demos live in `StoneyTECH-Trinity-GVAR-Engine` so the chain can finish at verification:
+
+```bash
+cd ../stoneytech-trinity-gvar-engine
+python -m gvar_engine.trinity_demo --scenario evidence-learning
+python -m gvar_engine.trinity_demo --scenario trinity
+```
+
 ## What the example does
 
 This repo contains two small loops over the same curriculum:
