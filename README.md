@@ -7,7 +7,7 @@ Two daily agents over a shared curriculum on the agentic stack. Same 20-concept 
 
 Both run on the **Anthropic TypeScript SDK** with single-call agent patterns. Phase 1 of the three-SDK comparison build (Learning / Watcher / JobR / Meta); sister agents in the comparison will run on LangGraph and the OpenAI Agents SDK; the meta-article compares the three.
 
-Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane and where the OpenAI Agents SDK or LangGraph become a better fit.
+Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane and where the OpenAI Agents SDK or LangGraph become a better fit. [Three repos, one thesis](https://stoneytech.net/learn/2026-05-05-three-repos-one-thesis) shows how this repo joins the wider proof set.
 
 ## Status
 
