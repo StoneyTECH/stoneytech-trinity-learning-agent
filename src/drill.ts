@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
 import { PRIMER_SYSTEM_PROMPT, buildPrimerUserPrompt } from './prompt-template-primer.ts';
-import { notifyTelegram } from './notify-telegram.ts';
+import { notifyBridge } from './notify-bridge.ts';
 import type { Concept, LedgerEntry, RegisterFilter } from './types.ts';
 import { conceptMatchesRegister } from './types.ts';
 
@@ -192,7 +192,7 @@ const updatedLedger = { ...ledger, drills: [...ledger.drills, entry] };
 writeFileSync(LEDGER_PATH, JSON.stringify(updatedLedger, null, 2) + '\n', 'utf-8');
 console.log(`✓ Ledger updated: ${LEDGER_PATH}`);
 
-// Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking.
+// Notification digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking.
 if (process.env.NOTIFY !== '0') {
   // n8n seam:
   // replace direct bridge delivery with a webhook or queue handoff when this
@@ -227,7 +227,7 @@ if (process.env.NOTIFY !== '0') {
     ``,
     ghLink ? `<a href="${ghLink}">📄 View draft on GitHub</a>` : `📄 ${draftPath}`
   ];
-  await notifyTelegram({ message: lines.filter(Boolean).join('\n') });
+  await notifyBridge({ message: lines.filter(Boolean).join('\n') });
 }
 
 console.log('');

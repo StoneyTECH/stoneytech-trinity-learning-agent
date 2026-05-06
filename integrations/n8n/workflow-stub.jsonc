@@ -1,6 +1,6 @@
 {
   // n8n upgrade seam for the learning pattern.
-  // Replace local cron and direct Telegram calls with webhook or schedule nodes.
+  // Replace local cron and direct bridge calls with webhook or schedule nodes.
   "name": "StoneyTECH Trinity Learning Agent Stub",
   "nodes": [
     {

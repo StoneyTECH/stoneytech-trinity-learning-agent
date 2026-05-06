@@ -1,5 +1,5 @@
 // Study entry point. Picks next concept due for SR, generates a Q+A pair via
-// Opus 4.7, sends a Telegram message with the question + canonical answer
+// Opus 4.7, sends an optional notification with the question + canonical answer
 // (collapsed below a separator), records an open attempt in the study ledger.
 //
 // Stoney later runs `npm run grade <slug> <0..5>` to log the self-assessed
@@ -8,7 +8,7 @@
 // Run: npm run study
 //   DRY_RUN=1                 — no API call, no ledger write
 //   CONCEPT=<slug>            — force a specific concept
-//   NOTIFY=0                  — skip Telegram
+//   NOTIFY=0                  — skip bridge delivery
 
 import Anthropic from '@anthropic-ai/sdk';
 import { resolve, dirname, join } from 'path';
@@ -21,7 +21,7 @@ import {
   pickNextStudySlug
 } from './study-ledger.ts';
 import { STUDY_SYSTEM_PROMPT, buildStudyUserPrompt } from './study-prompt.ts';
-import { notifyTelegram } from './notify-telegram.ts';
+import { notifyBridge } from './notify-bridge.ts';
 import type { Concept } from './types.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -77,7 +77,7 @@ console.log(
 
 if (DRY_RUN) {
   console.log('[dry-run] Would call Opus 4.7 for Q+A generation.');
-  console.log('[dry-run] Would send Telegram digest.');
+  console.log('[dry-run] Would send notification digest.');
   console.log('[dry-run] Would record open attempt in study-ledger.');
   process.exit(0);
 }
@@ -136,7 +136,7 @@ entry.attempts.push({
 saveStudyLedger(STUDY_LEDGER_PATH, ledger);
 console.log(`✓ Open attempt recorded in ${STUDY_LEDGER_PATH}`);
 
-// Telegram digest. Question on top, separator, canonical below.
+// Notification digest. Question on top, separator, canonical below.
 if (NOTIFY) {
   // n8n seam:
   // replace direct bridge delivery with a webhook or approval flow when a
@@ -160,8 +160,8 @@ if (NOTIFY) {
     `<code>npm run grade ${concept.slug} 3</code> — recalled with effort`,
     `<code>npm run grade ${concept.slug} 5</code> — instant + complete`
   ];
-  const ok = await notifyTelegram({ message: lines.join('\n') });
-  console.log(ok ? '✓ Telegram digest sent.' : '⚠ Telegram digest failed (non-blocking).');
+  const ok = await notifyBridge({ message: lines.join('\n') });
+  console.log(ok ? '✓ Notification digest sent.' : '⚠ Notification digest failed (non-blocking).');
 }
 
 console.log('');

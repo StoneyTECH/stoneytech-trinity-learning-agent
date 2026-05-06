@@ -3,7 +3,8 @@
 // Run: npm run grade <slug> <0..5> [optional notes...]
 //
 // Logs the quality grade against the most recent open attempt for <slug>,
-// computes the next SM-2 schedule, updates the ledger, and pings Telegram
+// computes the next SM-2 schedule, updates the ledger, and pings the optional
+// notification bridge
 // with the next-due date.
 
 import { resolve, dirname, join } from 'path';
@@ -11,7 +12,7 @@ import { fileURLToPath } from 'url';
 import { loadStudyLedger, saveStudyLedger, getOrCreateEntry } from './study-ledger.ts';
 import { nextSm2 } from './sm2.ts';
 import type { Quality } from './sm2.ts';
-import { notifyTelegram } from './notify-telegram.ts';
+import { notifyBridge } from './notify-bridge.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -84,7 +85,7 @@ console.log(`  ease ${next.ease_factor} · interval ${next.interval}d · reps ${
 console.log(`  next due: ${next.next_due}`);
 if (notes) console.log(`  notes: ${notes}`);
 
-// Telegram digest with the result + next due. Useful for tracking on the phone.
+// Notification digest with the result + next due.
 if (NOTIFY) {
   const grade =
     quality === 5
@@ -108,5 +109,5 @@ if (NOTIFY) {
     `<b>Next due:</b> ${next.next_due}`
   ];
   if (notes) lines.push(``, `<i>Notes: ${notes}</i>`);
-  await notifyTelegram({ message: lines.join('\n') });
+  await notifyBridge({ message: lines.join('\n') });
 }

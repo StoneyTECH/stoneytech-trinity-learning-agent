@@ -5,7 +5,7 @@
 // with live delivery defaults; configure the bridge entirely through env.
 
 export interface NotifyOptions {
-  /** Pre-formatted Telegram-flavored markdown / HTML body. */
+  /** Pre-formatted message body. */
   message: string;
   /** Optional chat-id override. */
   chatId?: string;
@@ -15,7 +15,7 @@ export interface NotifyOptions {
   strict?: boolean;
 }
 
-export async function notifyTelegram(opts: NotifyOptions): Promise<boolean> {
+export async function notifyBridge(opts: NotifyOptions): Promise<boolean> {
   const url = opts.bridgeUrl || process.env.TELEGRAM_BRIDGE_URL || '';
   const chatId = opts.chatId || process.env.TELEGRAM_CHAT_ID || '';
   const strict = opts.strict ?? false;
@@ -36,7 +36,7 @@ export async function notifyTelegram(opts: NotifyOptions): Promise<boolean> {
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
-      const msg = `Telegram bridge returned ${response.status}: ${detail.slice(0, 200)}`;
+      const msg = `Notification bridge returned ${response.status}: ${detail.slice(0, 200)}`;
       if (strict) throw new Error(msg);
       console.warn(`⚠ ${msg}`);
       return false;
@@ -46,7 +46,7 @@ export async function notifyTelegram(opts: NotifyOptions): Promise<boolean> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (strict) throw err;
-    console.warn(`⚠ Telegram notify failed (non-blocking): ${msg}`);
+    console.warn(`⚠ Notification bridge failed (non-blocking): ${msg}`);
     return false;
   }
 }
