@@ -1,0 +1,18 @@
+{
+  "roles": {
+    "draft_agent": {
+      "preferred": "anthropic",
+      "alternatives": ["openai", "google", "openrouter", "local"],
+      "default_model": "claude-opus-4-7"
+    },
+    "study_agent": {
+      "preferred": "anthropic",
+      "alternatives": ["openai", "openrouter", "local"],
+      "default_model": "claude-opus-4-7"
+    }
+  },
+  "notes": [
+    "Pick provider by role and job, not by repo-wide habit.",
+    "OpenRouter is a routing option, not the pattern itself."
+  ]
+}

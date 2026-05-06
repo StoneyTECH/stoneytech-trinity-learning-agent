@@ -1,0 +1,16 @@
+[
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "pattern:bounded-teaching", "type": "demonstrates" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "template:teaching-draft", "type": "uses_template" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "template:recall-question", "type": "uses_template" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "scenario:standalone", "type": "supports" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "scenario:pair-stoneytech-trinity-evidence-agent", "type": "supports" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "scenario:pair-stoneytech-trinity-gvar-engine", "type": "supports" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "scenario:trinity", "type": "supports" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "axiom:1", "type": "addresses" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "axiom:2", "type": "addresses" },
+  { "from": "repo:stoneytech-trinity-learning-agent", "to": "axiom:16", "type": "addresses" },
+  { "from": "scenario:pair-stoneytech-trinity-evidence-agent", "to": "repo:stoneytech-trinity-evidence-agent", "type": "pairs_with" },
+  { "from": "scenario:pair-stoneytech-trinity-gvar-engine", "to": "repo:stoneytech-trinity-gvar-engine", "type": "pairs_with" },
+  { "from": "scenario:trinity", "to": "repo:stoneytech-trinity-evidence-agent", "type": "includes" },
+  { "from": "scenario:trinity", "to": "repo:stoneytech-trinity-gvar-engine", "type": "includes" }
+]

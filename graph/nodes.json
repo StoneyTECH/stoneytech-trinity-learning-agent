@@ -1,0 +1,13 @@
+[
+  { "id": "repo:stoneytech-trinity-learning-agent", "kind": "repo", "title": "StoneyTECH-Trinity-Learning-Agent" },
+  { "id": "pattern:bounded-teaching", "kind": "pattern", "title": "Bounded teaching and progression" },
+  { "id": "template:teaching-draft", "kind": "template", "title": "Teaching draft template" },
+  { "id": "template:recall-question", "kind": "template", "title": "Recall question template" },
+  { "id": "scenario:standalone", "kind": "scenario", "title": "Standalone curriculum loop" },
+  { "id": "scenario:pair-stoneytech-trinity-evidence-agent", "kind": "scenario", "title": "Pair with evidence" },
+  { "id": "scenario:pair-stoneytech-trinity-gvar-engine", "kind": "scenario", "title": "Pair with GVAR" },
+  { "id": "scenario:trinity", "kind": "scenario", "title": "Trinity flow" },
+  { "id": "axiom:1", "kind": "axiom", "title": "The smallest lever wins" },
+  { "id": "axiom:2", "kind": "axiom", "title": "Push work down toward determinism" },
+  { "id": "axiom:16", "kind": "axiom", "title": "Do not curate without proving" }
+]

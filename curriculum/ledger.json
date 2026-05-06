@@ -1,0 +1,99 @@
+{
+  "schema": "learning-agent-ledger/v2",
+  "description": "Append-only record of which concepts have been drilled and when. Picker uses this to skip already-drilled concepts. v2 adds the `register` field so the picker can filter by register (architect | primer); same concept slug can in principle be drilled in both registers.",
+  "drills": [
+    {
+      "slug": "determinism-ladder",
+      "register": "architect",
+      "drilled_at": "2026-05-01",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-01-determinism-ladder.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "verification-loop-discipline",
+      "register": "architect",
+      "drilled_at": "2026-05-01",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-01-verification-loop-discipline.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "ship-with-failure-mode-named",
+      "register": "architect",
+      "drilled_at": "2026-05-01",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-01-ship-with-failure-mode-named.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "model-portability-and-its-limits",
+      "register": "architect",
+      "drilled_at": "2026-05-02",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-02-model-portability-and-its-limits.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "llms-as-a-loose-database",
+      "register": "primer",
+      "drilled_at": "2026-05-02",
+      "draft_path": "output/published/primer/2026-05-02-llms-as-a-loose-database.svx",
+      "status": "merged",
+      "note": "Hand-written + panel-verified (run 7841) before learning-agent register=primer mode existed. Backfilled into the ledger so the picker doesn't pick this concept again."
+    },
+    {
+      "slug": "ai-ml-llm-agents-sorting-out-the-words",
+      "register": "primer",
+      "drilled_at": "2026-05-09",
+      "draft_path": "output/published/primer/2026-05-09-ai-ml-llm-agents-sorting-out-the-words.svx",
+      "status": "merged",
+      "note": "Hand-written + panel-verified (run 8003) before learning-agent register=primer mode existed. Backfilled into the ledger so the picker doesn't pick this concept again."
+    },
+    {
+      "slug": "tokens-context-attention-no-math",
+      "register": "primer",
+      "drilled_at": "2026-05-03",
+      "draft_path": "output/drafts/primer/daily-primer-2026-05-03-tokens-context-attention-no-math.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "why-llms-hallucinate",
+      "register": "primer",
+      "drilled_at": "2026-05-03",
+      "draft_path": "output/drafts/primer/daily-primer-2026-05-03-why-llms-hallucinate.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "graph-constrained-execution",
+      "register": "architect",
+      "drilled_at": "2026-05-03",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-03-graph-constrained-execution.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "deployment-context-first",
+      "register": "architect",
+      "drilled_at": "2026-05-03",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-03-deployment-context-first.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "how-do-you-know-its-working",
+      "register": "primer",
+      "drilled_at": "2026-05-03",
+      "draft_path": "output/drafts/primer/daily-primer-2026-05-03-how-do-you-know-its-working.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "smallest-lever-wins",
+      "register": "architect",
+      "drilled_at": "2026-05-04",
+      "draft_path": "output/drafts/architect/daily-drill-2026-05-04-smallest-lever-wins.svx",
+      "status": "draft"
+    },
+    {
+      "slug": "prompt-injection-plain-language",
+      "register": "primer",
+      "drilled_at": "2026-05-04",
+      "draft_path": "output/drafts/primer/daily-primer-2026-05-04-prompt-injection-plain-language.svx",
+      "status": "draft"
+    }
+  ]
+}

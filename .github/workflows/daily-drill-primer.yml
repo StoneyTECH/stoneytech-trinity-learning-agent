@@ -1,0 +1,66 @@
+name: Daily Drill — Primer (Demystify AI)
+
+# 13:00 UTC every day (8:00am CDT / 7:00am CST). Offset one hour from the
+# architect-register run at 12:00 UTC so the two jobs can't race each other
+# on the shared curriculum/ledger.json.
+#
+# Manual dispatch enabled too, with optional concept slug override.
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      concept:
+        description: 'Force a specific primer concept slug (optional). Leave blank to pick the next undrilled one.'
+        required: false
+        type: string
+
+# Need write access to commit the generated draft + updated ledger back to main.
+permissions:
+  contents: write
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Run primer drill
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Switch the agent into Demystify-AI voice + 8-section primer template.
+          REGISTER: primer
+          # CI writes to a register-scoped subdir under output/drafts so the
+          # architect and primer workflows don't fight over the same path.
+          # The drill.ts GH-link builder recognizes either output/drafts/primer/
+          # or output/drafts/ and constructs the right blob URL for Telegram.
+          DRAFTS_DIR: ${{ github.workspace }}/output/drafts/primer
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          # Forced concept from manual dispatch (empty on scheduled runs).
+          CONCEPT: ${{ github.event.inputs.concept }}
+        run: |
+          mkdir -p output/drafts/primer
+          npm run drill
+
+      - name: Commit + push draft
+        run: |
+          if [ -n "$(git status --porcelain output/ curriculum/ledger.json)" ]; then
+            git config user.name "drill-agent"
+            git config user.email "drill-agent@stoneytech.net"
+            git add output/ curriculum/ledger.json
+            git commit -m "drill (primer): $(date -u +%Y-%m-%d) — automated daily Demystify run"
+            git push
+          else
+            echo "No new draft (primer curriculum exhausted, or DRY_RUN). Nothing to commit."
+          fi

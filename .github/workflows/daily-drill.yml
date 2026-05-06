@@ -1,0 +1,62 @@
+name: Daily Drill
+
+# 12:00 UTC every day. That's 7:00am CDT (most of the year) / 6:00am CST.
+# Manual dispatch also enabled so we can trigger ad-hoc runs.
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      concept:
+        description: 'Force a specific concept slug (optional). Leave blank to pick the next undrilled one.'
+        required: false
+        type: string
+
+# Need write access to commit the generated draft + updated ledger back to main.
+permissions:
+  contents: write
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Run drill
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # CI writes to a local dir under the workspace; we commit the file
+          # back to the drill-agent repo so we have a permanent record + a
+          # GitHub link to ship in the Telegram digest.
+          DRAFTS_DIR: ${{ github.workspace }}/output/drafts
+          # The Telegram-notify module reads this to build the GitHub link
+          # without us having to hard-code the repo path.
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          # Forced concept from manual dispatch (empty on scheduled runs).
+          CONCEPT: ${{ github.event.inputs.concept }}
+        run: |
+          mkdir -p output/drafts
+          npm run drill
+
+      - name: Commit + push draft
+        run: |
+          if [ -n "$(git status --porcelain output/ curriculum/ledger.json)" ]; then
+            git config user.name "drill-agent"
+            git config user.email "drill-agent@stoneytech.net"
+            git add output/ curriculum/ledger.json
+            git commit -m "drill: $(date -u +%Y-%m-%d) — automated daily run"
+            git push
+          else
+            echo "No new draft (curriculum exhausted, or DRY_RUN). Nothing to commit."
+          fi

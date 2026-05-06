@@ -1,0 +1,25 @@
+{
+  "name": "stoneytech-trinity-learning-agent",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Two daily agents over a shared curriculum on the agentic stack. learning (content engine) generates an .svx draft for the site; study (learning engine) sends a recall question + canonical answer for spaced repetition, with self-grading via `npm run grade`.",
+  "scripts": {
+    "hello": "tsx src/hello.ts",
+    "drill": "tsx src/drill.ts",
+    "study": "tsx src/study.ts",
+    "grade": "tsx src/grade.ts",
+    "list": "tsx src/list-concepts.ts",
+    "demo": "tsx src/demo.ts",
+    "mcp:demo": "tsx mcp/server.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

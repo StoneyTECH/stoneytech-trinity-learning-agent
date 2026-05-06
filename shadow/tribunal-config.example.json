@@ -1,0 +1,14 @@
+{
+  "enabled": false,
+  "mode": "score_only",
+  "jobs": {
+    "daily_drill": {
+      "primary_role": "draft_agent",
+      "shadow_roles": ["shadow_draft_judge"]
+    },
+    "daily_study": {
+      "primary_role": "study_agent",
+      "shadow_roles": ["shadow_study_judge"]
+    }
+  }
+}
