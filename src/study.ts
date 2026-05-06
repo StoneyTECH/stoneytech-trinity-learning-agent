@@ -139,7 +139,7 @@ console.log(`✓ Open attempt recorded in ${STUDY_LEDGER_PATH}`);
 // Telegram digest. Question on top, separator, canonical below.
 if (NOTIFY) {
   // n8n seam:
-  // replace direct Telegram delivery with a webhook or approval flow when a
+  // replace direct bridge delivery with a webhook or approval flow when a
   // larger workflow runtime should own notifications and follow-up actions.
   const lines = [
     `📚 <b>Daily study — ${today}</b>`,

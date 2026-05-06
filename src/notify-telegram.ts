@@ -1,18 +1,13 @@
-// POST a message to the Nemotron Telegram bridge (n8n webhook).
+// POST a message to an optional notification bridge.
 //
-// The bridge is an n8n workflow that owns the bot token + chat-id mapping.
-// We just send {message, chat_id} and it does the actual Telegram delivery.
-//
-// Bridge URL and chat-id are configurable via env, with sensible defaults that
-// match the existing jobsearch-ops tooling.
-
-const DEFAULT_BRIDGE_URL = 'https://stoneytech.app.n8n.cloud/webhook/nemotron-notify';
-const DEFAULT_CHAT_ID = '7387290079';
+// The bridge can be an n8n workflow, queue ingress, or any small delivery
+// service that accepts {message, chat_id}. Public pattern repos should not ship
+// with live delivery defaults; configure the bridge entirely through env.
 
 export interface NotifyOptions {
   /** Pre-formatted Telegram-flavored markdown / HTML body. */
   message: string;
-  /** Optional chat-id override. Default = stoney's personal chat. */
+  /** Optional chat-id override. */
   chatId?: string;
   /** Optional bridge URL override. */
   bridgeUrl?: string;
@@ -21,9 +16,14 @@ export interface NotifyOptions {
 }
 
 export async function notifyTelegram(opts: NotifyOptions): Promise<boolean> {
-  const url = opts.bridgeUrl || process.env.TELEGRAM_BRIDGE_URL || DEFAULT_BRIDGE_URL;
-  const chatId = opts.chatId || process.env.TELEGRAM_CHAT_ID || DEFAULT_CHAT_ID;
+  const url = opts.bridgeUrl || process.env.TELEGRAM_BRIDGE_URL || '';
+  const chatId = opts.chatId || process.env.TELEGRAM_CHAT_ID || '';
   const strict = opts.strict ?? false;
+
+  if (!url || !chatId) {
+    console.log('Notification bridge not configured; skipping delivery.');
+    return false;
+  }
 
   try {
     const response = await fetch(url, {

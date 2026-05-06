@@ -12,7 +12,6 @@ import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { homedir } from 'os';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
 import { PRIMER_SYSTEM_PROMPT, buildPrimerUserPrompt } from './prompt-template-primer.ts';
@@ -36,14 +35,13 @@ if (!apiKey && !DRY_RUN_NO_API) {
   process.exit(1);
 }
 
-// Drafts dir defaults are register-aware.
-//   architect → ~/stoneytech-site/src/posts/learn/_drafts (Determinism Ladder series)
-//   primer    → ~/stoneytech-site/src/posts/demystify/_drafts (Demystify AI series)
-// Override either with DRAFTS_DIR. In CI, DRAFTS_DIR is set per-workflow to
-// the repo workspace's output/drafts/<register>/.
+// Drafts dir defaults are register-aware and stay inside the repo by default.
+//   architect → ./output/drafts/architect
+//   primer    → ./output/drafts/primer
+// Override either with DRAFTS_DIR when embedding this pattern in a larger app.
 const DEFAULT_LOCAL_DRAFTS_DIR = IS_PRIMER
-  ? join(homedir(), 'stoneytech-site/src/posts/demystify/_drafts')
-  : join(homedir(), 'stoneytech-site/src/posts/learn/_drafts');
+  ? join(ROOT, 'output/drafts/primer')
+  : join(ROOT, 'output/drafts/architect');
 const DRAFTS_DIR = process.env.DRAFTS_DIR || DEFAULT_LOCAL_DRAFTS_DIR;
 
 const LEDGER_PATH = process.env.DRILL_LEDGER || join(ROOT, 'curriculum/ledger.json');
@@ -197,7 +195,7 @@ console.log(`✓ Ledger updated: ${LEDGER_PATH}`);
 // Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking.
 if (process.env.NOTIFY !== '0') {
   // n8n seam:
-  // replace direct Telegram delivery with a webhook or queue handoff when this
+  // replace direct bridge delivery with a webhook or queue handoff when this
   // loop graduates into a larger orchestration surface.
   // Try to extract the excerpt from the generated frontmatter for a richer digest.
   const excerptMatch = draftText.match(/excerpt:\s*([^\n]+)/);
@@ -233,5 +231,4 @@ if (process.env.NOTIFY !== '0') {
 }
 
 console.log('');
-const targetDir = IS_PRIMER ? 'src/posts/demystify/' : 'src/posts/learn/';
-console.log(`Next step: review the draft, refine, then move to ${targetDir} and run the GVAR v3.3 panel via webhook.`);
+console.log('Next step: review the draft, refine it, then hand it to the next verification or publication stage.');

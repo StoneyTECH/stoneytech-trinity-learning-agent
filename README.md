@@ -201,7 +201,7 @@ That is the full public proof set:
 
 ## Status
 
-**v0.1 — local-runnable.** Works end-to-end on this machine. Telegram delivery and production cron deploy are still deferred in the site backlog.
+**v0.1 — portable and local-runnable.** The core loop runs locally, optional bridge delivery is env-driven, and larger schedulers or cron surfaces remain upgrade seams rather than baked assumptions.
 
 ## Quick start
 
@@ -221,7 +221,7 @@ npm run study
 npm run grade <slug> <0-5> [notes...]
 ```
 
-By default, learning drafts go to `~/stoneytech-site/src/posts/learn/_drafts/` and study state lives in `curriculum/study-ledger.json`.
+By default, generated drafts go to `./output/drafts/architect/` or `./output/drafts/primer/`, and study state lives in `curriculum/study-ledger.json`.
 
 ## Demo paths
 
