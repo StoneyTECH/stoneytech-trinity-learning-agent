@@ -10,7 +10,9 @@
     "drill": "tsx src/drill.ts",
     "study": "tsx src/study.ts",
     "grade": "tsx src/grade.ts",
-    "list": "tsx src/list-concepts.ts"
+    "list": "tsx src/list-concepts.ts",
+    "demo": "tsx src/demo.ts",
+    "mcp:demo": "tsx mcp/server.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
