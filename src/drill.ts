@@ -37,13 +37,13 @@ if (!apiKey && !DRY_RUN_NO_API) {
 }
 
 // Drafts dir defaults are register-aware.
-//   architect → ~/JobSearch/stoneytech-site/src/posts/learn/_drafts (Determinism Ladder series)
-//   primer    → ~/JobSearch/stoneytech-site/src/posts/demystify/_drafts (Demystify AI series)
+//   architect → ~/stoneytech-site/src/posts/learn/_drafts (Determinism Ladder series)
+//   primer    → ~/stoneytech-site/src/posts/demystify/_drafts (Demystify AI series)
 // Override either with DRAFTS_DIR. In CI, DRAFTS_DIR is set per-workflow to
 // the repo workspace's output/drafts/<register>/.
 const DEFAULT_LOCAL_DRAFTS_DIR = IS_PRIMER
-  ? join(homedir(), 'JobSearch/stoneytech-site/src/posts/demystify/_drafts')
-  : join(homedir(), 'JobSearch/stoneytech-site/src/posts/learn/_drafts');
+  ? join(homedir(), 'stoneytech-site/src/posts/demystify/_drafts')
+  : join(homedir(), 'stoneytech-site/src/posts/learn/_drafts');
 const DRAFTS_DIR = process.env.DRAFTS_DIR || DEFAULT_LOCAL_DRAFTS_DIR;
 
 const LEDGER_PATH = process.env.DRILL_LEDGER || join(ROOT, 'curriculum/ledger.json');

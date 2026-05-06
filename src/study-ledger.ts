@@ -31,7 +31,7 @@ export interface StudyLedgerFile {
 }
 
 const EMPTY_LEDGER: StudyLedgerFile = {
-  schema: 'drill-agent-study-ledger/v1',
+  schema: 'learning-agent-study-ledger/v1',
   description:
     'Spaced-repetition state per concept. Each entry tracks SM-2 (ease_factor / interval / repetitions / next_due) plus all attempts.',
   entries: []

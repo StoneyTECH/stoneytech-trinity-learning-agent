@@ -1,4 +1,4 @@
-// Shared types for the drill-agent.
+// Shared types for the learning-agent.
 
 export type Tier = 1 | 2 | 3;
 

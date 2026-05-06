@@ -1,5 +1,5 @@
 {
-  "schema": "drill-agent-curriculum/v2",
+  "schema": "learning-agent-curriculum/v2",
   "description": "Concepts the drill agent picks from. Each is one teachable unit. tier: 1=must-own, 2=must-recognize, 3=vocabulary. register: 'architect' (Determinism Ladder voice, ~2000 words, war-story-anchored), 'primer' (Demystify AI voice, ~1300 words, audience-anecdote-anchored), or 'both' (concept works in either register; pick mode at run time). Prerequisites are slugs that must be drilled in the same register before this one. tags map to existing essays + axioms.",
   "concepts": [
     {

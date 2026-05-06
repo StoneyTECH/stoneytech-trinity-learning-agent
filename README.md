@@ -1,11 +1,11 @@
-# drill-agent
+# learning-agent
 
 Two daily agents over a shared curriculum on the agentic stack. Same 20-concept catalog feeds both:
 
 - **`drill`** — content engine. Picks the next undrilled concept, generates a 1300-word multi-level `.svx` draft in Stoney's voice, commits to `output/drafts/`. Removes the blank page on the weekly publishing cadence.
 - **`study`** — learning engine. Picks the next concept due for spaced repetition, sends a recall question + canonical answer via Telegram, records an open attempt. Self-graded via `npm run grade <slug> <0-5>`; SM-2 schedules the next review.
 
-Both run on the **Anthropic TypeScript SDK** with single-call agent patterns. Phase 1 of the three-SDK comparison build (Drill / Watcher / JobR / Meta); sister agents in the comparison will run on LangGraph and the OpenAI Agents SDK; the meta-article compares the three.
+Both run on the **Anthropic TypeScript SDK** with single-call agent patterns. Phase 1 of the three-SDK comparison build (Learning / Watcher / JobR / Meta); sister agents in the comparison will run on LangGraph and the OpenAI Agents SDK; the meta-article compares the three.
 
 Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane and where the OpenAI Agents SDK or LangGraph become a better fit.
 
@@ -31,7 +31,7 @@ npm run study                          # Pick next due, send Telegram recall Q+A
 npm run grade <slug> <0-5> [notes...]  # Grade your recall, schedule next review
 ```
 
-By default, drill drafts go to `~/JobSearch/stoneytech-site/src/posts/learn/_drafts/` (override with `DRAFTS_DIR=`). Study state lives in `curriculum/study-ledger.json` (override with `STUDY_LEDGER=`).
+By default, learning drafts go to `~/stoneytech-site/src/posts/learn/_drafts/` (override with `DRAFTS_DIR=`). Study state lives in `curriculum/study-ledger.json` (override with `STUDY_LEDGER=`).
 
 ## How it picks
 

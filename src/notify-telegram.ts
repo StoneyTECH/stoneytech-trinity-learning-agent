@@ -4,7 +4,7 @@
 // We just send {message, chat_id} and it does the actual Telegram delivery.
 //
 // Bridge URL and chat-id are configurable via env, with sensible defaults that
-// match the existing JobSearch tooling.
+// match the existing jobsearch-ops tooling.
 
 const DEFAULT_BRIDGE_URL = 'https://stoneytech.app.n8n.cloud/webhook/nemotron-notify';
 const DEFAULT_CHAT_ID = '7387290079';
