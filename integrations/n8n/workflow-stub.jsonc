@@ -1,0 +1,22 @@
+{
+  // n8n upgrade seam for the learning pattern.
+  // Replace local cron and direct Telegram calls with webhook or schedule nodes.
+  "name": "StoneyTECH Trinity Learning Agent Stub",
+  "nodes": [
+    {
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "notes": "Fire daily drill or study jobs."
+    },
+    {
+      "name": "Run Drill or Study",
+      "type": "n8n-nodes-base.code",
+      "notes": "Call src/drill.ts or src/study.ts. Swap provider routing here if desired."
+    },
+    {
+      "name": "Optional Shadow Tribunal",
+      "type": "n8n-nodes-base.if",
+      "notes": "Fan out to shadow judges here before posting or scheduling."
+    }
+  ]
+}

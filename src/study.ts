@@ -83,6 +83,11 @@ if (DRY_RUN) {
 }
 
 console.log('Calling Opus 4.7 for Q+A generation...');
+// Upgrade seam:
+// - route this study role through agents/graph-map.json when provider selection
+//   should be job-specific
+// - run silent shadow graders or question reviewers from
+//   shadow/tribunal-config.example.json when recall quality needs a tribunal
 const client = new Anthropic({ apiKey: apiKey! });
 const startTime = Date.now();
 
@@ -133,6 +138,9 @@ console.log(`✓ Open attempt recorded in ${STUDY_LEDGER_PATH}`);
 
 // Telegram digest. Question on top, separator, canonical below.
 if (NOTIFY) {
+  // n8n seam:
+  // replace direct Telegram delivery with a webhook or approval flow when a
+  // larger workflow runtime should own notifications and follow-up actions.
   const lines = [
     `📚 <b>Daily study — ${today}</b>`,
     ``,

@@ -1,0 +1,21 @@
+{
+  "name": "stoneytech-trinity-learning-agent",
+  "mode": "read-only",
+  "description": "Repo-local MCP surface for the bounded teaching pattern.",
+  "tools": [
+    "get_repo_overview",
+    "get_pattern",
+    "get_axioms_addressed",
+    "get_scenarios",
+    "get_graph",
+    "get_templates"
+  ],
+  "sources": [
+    "../README.md",
+    "../PATTERN.md",
+    "../AXIOMS.md",
+    "../SCENARIOS.md",
+    "../graph/nodes.json",
+    "../graph/edges.json"
+  ]
+}

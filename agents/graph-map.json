@@ -1,0 +1,20 @@
+{
+  "jobs": {
+    "daily_drill": {
+      "primary_role": "draft_agent",
+      "shadow_roles": ["shadow_draft_judge"],
+      "template": "template:teaching-draft"
+    },
+    "daily_study": {
+      "primary_role": "study_agent",
+      "shadow_roles": ["shadow_study_judge"],
+      "template": "template:recall-question"
+    }
+  },
+  "roles": {
+    "draft_agent": { "provider_binding": "preferred", "mode": "primary" },
+    "study_agent": { "provider_binding": "preferred", "mode": "primary" },
+    "shadow_draft_judge": { "provider_binding": "alternative_1", "mode": "non_blocking_shadow" },
+    "shadow_study_judge": { "provider_binding": "alternative_1", "mode": "non_blocking_shadow" }
+  }
+}

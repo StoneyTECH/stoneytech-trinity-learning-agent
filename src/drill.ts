@@ -102,6 +102,11 @@ if (DRY_RUN_NO_API) {
 }
 
 console.log(`Calling Opus 4.7 for ${REGISTER}-register draft generation...`);
+// Upgrade seam:
+// - map the draft role through agents/graph-map.json when provider routing
+//   should choose local, vendor, or OpenRouter paths
+// - add shadow draft judges from shadow/tribunal-config.example.json when
+//   draft quality should be compared without blocking the primary loop
 
 const client = new Anthropic({ apiKey: apiKey! });
 const startTime = Date.now();
@@ -191,6 +196,9 @@ console.log(`✓ Ledger updated: ${LEDGER_PATH}`);
 
 // Telegram digest. Skipped if NOTIFY=0 (e.g. in tests). Failures are non-blocking.
 if (process.env.NOTIFY !== '0') {
+  // n8n seam:
+  // replace direct Telegram delivery with a webhook or queue handoff when this
+  // loop graduates into a larger orchestration surface.
   // Try to extract the excerpt from the generated frontmatter for a richer digest.
   const excerptMatch = draftText.match(/excerpt:\s*([^\n]+)/);
   const excerpt = excerptMatch ? excerptMatch[1].replace(/^["']|["']$/g, '').trim() : '';
