@@ -1,17 +1,161 @@
 # learning-agent
 
-Two daily agents over a shared curriculum on the agentic stack. Same 20-concept catalog feeds both:
+Agent-first pattern repo for **bounded teaching and progression**.
 
-- **`drill`** — content engine. Picks the next undrilled concept, generates a 1300-word multi-level `.svx` draft in Stoney's voice, commits to `output/drafts/`. Removes the blank page on the weekly publishing cadence.
-- **`study`** — learning engine. Picks the next concept due for spaced repetition, sends a recall question + canonical answer via Telegram, records an open attempt. Self-graded via `npm run grade <slug> <0-5>`; SM-2 schedules the next review.
+This repo demonstrates one reusable shape:
 
-Both run on the **Anthropic TypeScript SDK** with single-call agent patterns. Phase 1 of the three-SDK comparison build (Learning / Watcher / JobR / Meta); sister agents in the comparison will run on LangGraph and the OpenAI Agents SDK; the meta-article compares the three.
+- a curriculum exists
+- an agent picks the next useful concept
+- the system produces a teaching artifact or recall prompt
+- progression is tracked over time
 
-Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane and where the OpenAI Agents SDK or LangGraph become a better fit. [Three repos, one thesis](https://stoneytech.net/learn/2026-05-05-three-repos-one-thesis) shows how this repo joins the wider proof set.
+The point is not the current curriculum. The point is the pattern.
+
+Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane. [Three repos, one thesis](https://stoneytech.net/learn/2026-05-05-three-repos-one-thesis) shows how this repo joins the wider proof set.
+
+## Purpose
+
+Use this repo as a reference when an agent needs to:
+
+- draft teaching content from a bounded curriculum
+- advance through topics with explicit progression rules
+- pair content generation with spaced repetition
+
+Do not use this repo as a production learning platform. It is a pattern repo, not a full application.
+
+## Pattern claim
+
+**Pick the next teachable thing on purpose, then generate or reinforce it in a bounded loop.**
+
+That shape is useful for:
+
+- onboarding systems
+- study companions
+- concept drills
+- progressive content generation
+
+## Design contract
+
+### Graph first
+
+The control shape is:
+
+```text
+curriculum -> pick next concept -> draft or recall -> update ledger
+```
+
+This repo uses a small loop instead of a full graph runtime, but the flow is still named first so an agent can reuse it.
+
+### MCP first
+
+The bounded context surface is:
+
+- the curriculum
+- prerequisite state
+- drill ledger
+- study ledger
+
+If this pattern is wrapped by an MCP later, that MCP should expose curriculum state and progression state, not an unbounded authoring environment.
+
+### Template first
+
+The reusable contracts are:
+
+- the teaching-draft template
+- the recall-question template
+- the grading scale
+
+Those templates are the portable teaching surface for agents and humans.
+
+## Runtime shape
+
+```text
+curriculum
+  -> picker
+  -> draft or recall prompt
+  -> ledger update
+  -> next concept chosen from progression state
+```
+
+## When to use this pattern
+
+Use this pattern when:
+
+- progression matters more than one-off answers
+- the system should know what has already been covered
+- teaching and recall both matter
+- a small loop is enough
+
+Do not use this pattern when:
+
+- the system first needs outside research
+- the output must pass multi-lens acceptance checks
+- the work spans many review stages or external tools
+
+For those cases, pair it with `evidence-agent` or `gvar-engine`.
+
+## Standalone scenario
+
+Use `learning-agent` by itself for:
+
+- a concept-of-the-day teaching loop
+- a recall and reinforcement companion
+- progressive curriculum generation
+
+## Pair scenarios
+
+### With `evidence-agent`
+
+Use the pair when:
+
+- a lesson needs a bounded evidence input first
+- teaching content should be grounded before drafting
+
+Flow:
+
+```text
+evidence-agent -> learning-agent
+```
+
+`evidence-agent` gathers a bounded brief. `learning-agent` turns that material into a teaching artifact.
+
+### With `gvar-engine`
+
+Use the pair when:
+
+- a teaching artifact needs structured review before use or publication
+
+Flow:
+
+```text
+learning-agent -> gvar-engine
+```
+
+`learning-agent` drafts. `gvar-engine` verifies whether the draft is acceptable yet.
+
+## Trinity scenario
+
+Use all three together when the job is:
+
+- gather bounded evidence
+- teach or explain from that material
+- verify the result before acceptance
+
+Flow:
+
+```text
+evidence-agent -> learning-agent -> gvar-engine
+```
+
+That is the full public proof set:
+
+- `evidence-agent` researches
+- `learning-agent` teaches
+- `gvar-engine` verifies
 
 ## Status
 
-**v0.1 — local-runnable.** Works end-to-end on your machine. Telegram delivery and production cron deploy are deferred (GVAR-16 / GVAR-17 in the stoneytech-site backlog).
+**v0.1 — local-runnable.** Works end-to-end on this machine. Telegram delivery and production cron deploy are still deferred in the site backlog.
 
 ## Quick start
 
@@ -20,78 +164,79 @@ cp .env.example .env
 # Fill in ANTHROPIC_API_KEY in .env
 
 npm install
-npm run hello                          # Verify SDK + API key (calls Opus 4.7 once)
-npm run list                           # See the curriculum + drill status
+npm run hello
+npm run list
 
 # Content engine
-npm run drill                          # Pick next undrilled, generate .svx draft
+npm run drill
 
 # Learning engine
-npm run study                          # Pick next due, send Telegram recall Q+A
-npm run grade <slug> <0-5> [notes...]  # Grade your recall, schedule next review
+npm run study
+npm run grade <slug> <0-5> [notes...]
 ```
 
-By default, learning drafts go to `~/stoneytech-site/src/posts/learn/_drafts/` (override with `DRAFTS_DIR=`). Study state lives in `curriculum/study-ledger.json` (override with `STUDY_LEDGER=`).
+By default, learning drafts go to `~/stoneytech-site/src/posts/learn/_drafts/` and study state lives in `curriculum/study-ledger.json`.
+
+## What the example does
+
+This repo contains two small loops over the same curriculum:
+
+- `drill` — picks the next undrilled concept and generates a teaching draft
+- `study` — picks the next due concept and sends a recall prompt with SM-2 scheduling
 
 ## How it picks
 
 The picker (`src/picker.ts`):
-1. Filters concepts whose prerequisites have all been drilled (or are empty).
-2. Filters out already-drilled concepts.
-3. Prefers tier 1 (must-own) over tier 2 (must-recognize) over tier 3 (vocabulary).
-4. Within a tier, prefers concepts with the fewest prerequisites — closest to the determinism-ladder spine.
-5. Tiebreaks by lever recency: prefer the lever that hasn't been touched in the last five drills (so the cadence rotates rather than stalling on one layer).
 
-Force a specific concept: `CONCEPT=rag-vs-lora npm run drill`.
+1. filters concepts whose prerequisites are satisfied
+2. filters out already-drilled concepts
+3. prefers lower-tier foundation concepts first
+4. prefers concepts closest to the main progression spine
+5. rotates across recent levers so the cadence does not stall
 
-Dry-run (no draft written, no ledger appended, prints to stdout): `DRY_RUN=1 npm run drill`.
+Force a specific concept:
 
-## How it generates
+```bash
+CONCEPT=rag-vs-lora npm run drill
+```
 
-The prompt template (`src/prompt-template.ts`) instructs Opus 4.7 to produce a multi-level teaching draft following the `.svx` frontmatter conventions of stoneytech-site. Eight-section structure: opening scar / metaphor / definition / formal frame / trade-offs / war story / prototype assignment / spirit. Voice rules pinned in the system prompt. Output is a complete `.svx` file ready for review.
+Dry-run:
 
-Drafts ship with `verification.status: pending-panel` — they need to clear the GVAR v3.3 6-verifier panel via the stoneytech-site webhook before the banner turns green.
+```bash
+DRY_RUN=1 npm run drill
+```
 
-## Curriculum
+## SM-2 recall loop
 
-`curriculum/concepts.json` — 20 concepts at v0.1, expanding toward 50 as the practice runs. Each concept has `slug`, `title`, `tier`, `lever`, `prerequisites`, `tags`, `war_story_hint`, `anchor_axiom`.
+The study side uses SM-2 spaced repetition:
 
-`curriculum/ledger.json` — append-only record of drills. The picker reads this to skip already-drilled concepts.
+- grades `0-2` reset the concept to near-term review
+- grades `3-5` expand the interval
+- state is kept per concept in `curriculum/study-ledger.json`
 
-To add a new concept: edit `concepts.json`, push, the next `npm run drill` will see it.
+## Copy this shape into a real app
 
-## SM-2 spaced repetition (the study engine)
+Keep:
 
-Uses [SuperMemo SM-2](https://www.supermemo.com/en/archives1990-2015/english/ol/sm2). Quality grades 0-5:
+- explicit curriculum state
+- progression-aware picking
+- separate generation and recall loops
+- small, inspectable output steps
 
-- **5** instant + complete recall
-- **4** recall with hesitation
-- **3** recall with significant effort (would have failed without hint)
-- **2** wrong, but the right answer felt familiar
-- **1** wrong, the right answer felt new
-- **0** total blank
+Replace:
 
-Below 3 → repetitions reset, interval to 1 day. ≥3 → interval grows: 1d → 6d → previous × ease. Ease factor adjusts on every review with floor 1.3.
+- the curriculum
+- the delivery channel
+- the output format
+- the persistence and scheduling backend
 
-State per concept lives in `curriculum/study-ledger.json` and is committed back to main on each daily run.
+## Files
 
-## CI
-
-Two GitHub Actions workflows:
-
-- **Daily Drill** — 12:00 UTC (7am CDT). Generates the next essay draft, commits to `output/drafts/`, pushes Telegram digest with the GitHub link.
-- **Daily Study** — 13:00 UTC (8am CDT, an hour after the drill). Generates the next study Q+A, sends Telegram, logs an open attempt.
-
-Manual triggers via `gh workflow run` or the GitHub Actions UI; both accept an optional `concept` slug input.
-
-## Roadmap
-
-- **v0.1** ✓ Local-runnable drill.
-- **v0.2** ✓ Drill on cron + Telegram digest via the Nemotron bridge.
-- **v0.3** ✓ Study agent + SM-2 + grade CLI + daily-study cron.
-- **v0.4** (GVAR-16.5) — Auto-PR drill drafts to stoneytech-site. Removes the manual copy step. Needs a fine-grained PAT for cross-repo writes.
-- **v0.5** (inbound Telegram) — Auto-grading: study sends Q, you reply via Telegram, n8n webhook captures the reply, an LLM judges against canonical, posts grade back. Removes the CLI grade step.
-- **v0.6** (GVAR-29) — Sibling watcher agent: polls AI-influencer feeds, produces a daily intelligence digest, same Telegram bridge.
+- `src/picker.ts` — progression-aware concept selection
+- `src/prompt-template.ts` — teaching-draft prompt shape
+- `curriculum/concepts.json` — concept catalog
+- `curriculum/ledger.json` — drill history
+- `curriculum/study-ledger.json` — recall state
 
 ## License
 
