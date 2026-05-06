@@ -27,5 +27,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // - replace with a real MCP SDK server when transport matters
   // - keep the tools read-only
   // - keep the file graph as the portable source of truth
+  // - run this MCP through the StoneyTECH MCP compliance scanner before promotion
   console.log(JSON.stringify({ overview: getRepoOverview(), graph: getGraph() }, null, 2));
 }

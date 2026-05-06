@@ -90,6 +90,8 @@ See [AXIOMS.md](./AXIOMS.md) for the local doctrine map.
 
 The shared StoneyTECH MCP gives family doctrine. This repo-local MCP exposes curriculum and progression truth.
 
+Before promoting the local MCP beyond development, run it through the StoneyTECH MCP compliance scanner and keep the scan result with the release notes or repo receipts.
+
 ## Runtime shape
 
 ```text
