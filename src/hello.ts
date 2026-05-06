@@ -20,7 +20,7 @@ const response = await client.messages.create({
     {
       role: 'user',
       content:
-        'In one sentence, confirm you are Claude Opus 4.7 and the StoneyTECH learning-agent ' +
+        'In one sentence, confirm you are Claude Opus 4.7 and the StoneyTECH Trinity learning-agent ' +
         'has a working API connection. Be brief and pragmatic — no hedging.'
     }
   ]
@@ -31,7 +31,7 @@ const text = response.content
   .map((b) => (b.type === 'text' ? b.text : ''))
   .join('\n');
 
-console.log('=== Learning-agent hello-world ===');
+console.log('=== StoneyTECH Trinity Learning-Agent hello-world ===');
 console.log(`Model used: ${response.model}`);
 console.log(`Stop reason: ${response.stop_reason}`);
 console.log(`Tokens — in: ${response.usage.input_tokens}, out: ${response.usage.output_tokens}`);

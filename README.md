@@ -1,4 +1,4 @@
-# learning-agent
+# StoneyTECH-Trinity-Learning-Agent
 
 Agent-first pattern repo for **bounded teaching and progression**.
 
@@ -12,6 +12,14 @@ This repo demonstrates one reusable shape:
 The point is not the current curriculum. The point is the pattern.
 
 Companion reading: [Three SDKs, three jobs](https://stoneytech.net/learn/2026-05-05-three-sdks-three-jobs) explains why this repo stays in the smallest-loop lane. [Three repos, one thesis](https://stoneytech.net/learn/2026-05-05-three-repos-one-thesis) shows how this repo joins the wider proof set.
+
+## Family
+
+This repo is one member of the StoneyTECH Trinity pattern set:
+
+- `StoneyTECH-Trinity-Learning-Agent`
+- `StoneyTECH-Trinity-Evidence-Agent`
+- `StoneyTECH-Trinity-GVAR-Engine`
 
 ## Purpose
 
@@ -67,6 +75,21 @@ The reusable contracts are:
 
 Those templates are the portable teaching surface for agents and humans.
 
+## Axioms addressed
+
+- [Axiom #1 — the smallest lever wins](https://stoneytech.net/axioms#smallest-lever-wins): this repo keeps the loop intentionally small.
+- [Axiom #2 — push work down toward determinism](https://stoneytech.net/axioms#push-toward-determinism): the curriculum and ledger do the steering work instead of free-form guesswork.
+- [Axiom #16 — do not curate without proving](https://stoneytech.net/axioms#dont-curate-without-proving): concepts are exercised through runnable drills and recall loops.
+
+See [AXIOMS.md](./AXIOMS.md) for the local doctrine map.
+
+## Related MCPs
+
+- StoneyTECH public content MCP: [https://public-content-mcp.stoneytech.net/mcp](https://public-content-mcp.stoneytech.net/mcp)
+- local repo MCP stub: [mcp/manifest.json](./mcp/manifest.json)
+
+The shared StoneyTECH MCP gives family doctrine. This repo-local MCP exposes curriculum and progression truth.
+
 ## Runtime shape
 
 ```text
@@ -92,11 +115,32 @@ Do not use this pattern when:
 - the output must pass multi-lens acceptance checks
 - the work spans many review stages or external tools
 
-For those cases, pair it with `evidence-agent` or `gvar-engine`.
+For those cases, pair it with `StoneyTECH-Trinity-Evidence-Agent` or `StoneyTECH-Trinity-GVAR-Engine`.
+
+## Bring your own model
+
+This repo starts with a direct Anthropic path, but it should grow with the reader.
+
+Upgrade later to:
+
+- local agents
+- direct vendor keys across providers
+- OpenRouter routing
+- graph-mapped role selection
+- shadow tribunals for draft or study quality
+- `n8n` scheduling and webhook delivery
+
+The upgrade seams live in:
+
+- [agents/graph-map.json](./agents/graph-map.json)
+- [providers/provider-map.example.json](./providers/provider-map.example.json)
+- [shadow/tribunal-config.example.json](./shadow/tribunal-config.example.json)
+- [integrations/n8n/workflow-stub.jsonc](./integrations/n8n/workflow-stub.jsonc)
+- [graph/README.md](./graph/README.md)
 
 ## Standalone scenario
 
-Use `learning-agent` by itself for:
+Use `StoneyTECH-Trinity-Learning-Agent` by itself for:
 
 - a concept-of-the-day teaching loop
 - a recall and reinforcement companion
@@ -104,7 +148,7 @@ Use `learning-agent` by itself for:
 
 ## Pair scenarios
 
-### With `evidence-agent`
+### With `StoneyTECH-Trinity-Evidence-Agent`
 
 Use the pair when:
 
@@ -114,12 +158,12 @@ Use the pair when:
 Flow:
 
 ```text
-evidence-agent -> learning-agent
+StoneyTECH-Trinity-Evidence-Agent -> StoneyTECH-Trinity-Learning-Agent
 ```
 
-`evidence-agent` gathers a bounded brief. `learning-agent` turns that material into a teaching artifact.
+`StoneyTECH-Trinity-Evidence-Agent` gathers a bounded brief. `StoneyTECH-Trinity-Learning-Agent` turns that material into a teaching artifact.
 
-### With `gvar-engine`
+### With `StoneyTECH-Trinity-GVAR-Engine`
 
 Use the pair when:
 
@@ -128,10 +172,10 @@ Use the pair when:
 Flow:
 
 ```text
-learning-agent -> gvar-engine
+StoneyTECH-Trinity-Learning-Agent -> StoneyTECH-Trinity-GVAR-Engine
 ```
 
-`learning-agent` drafts. `gvar-engine` verifies whether the draft is acceptable yet.
+`StoneyTECH-Trinity-Learning-Agent` drafts. `StoneyTECH-Trinity-GVAR-Engine` verifies whether the draft is acceptable yet.
 
 ## Trinity scenario
 
@@ -144,14 +188,14 @@ Use all three together when the job is:
 Flow:
 
 ```text
-evidence-agent -> learning-agent -> gvar-engine
+StoneyTECH-Trinity-Evidence-Agent -> StoneyTECH-Trinity-Learning-Agent -> StoneyTECH-Trinity-GVAR-Engine
 ```
 
 That is the full public proof set:
 
-- `evidence-agent` researches
-- `learning-agent` teaches
-- `gvar-engine` verifies
+- `StoneyTECH-Trinity-Evidence-Agent` researches
+- `StoneyTECH-Trinity-Learning-Agent` teaches
+- `StoneyTECH-Trinity-GVAR-Engine` verifies
 
 ## Status
 
@@ -230,6 +274,20 @@ Replace:
 - the output format
 - the persistence and scheduling backend
 
+## Local graph and MCP
+
+This repo ships a file-backed graph DB and a read-only MCP stub:
+
+- [graph/nodes.json](./graph/nodes.json)
+- [graph/edges.json](./graph/edges.json)
+- [mcp/server.ts](./mcp/server.ts)
+
+The graph starts as files on purpose. If the repo grows up:
+
+- move to SQLite or Postgres for larger local state
+- move to a graph-native backend when relationships become the main query surface
+- keep the MCP boundary read-only even after the storage backend changes
+
 ## Files
 
 - `src/picker.ts` — progression-aware concept selection
@@ -237,7 +295,15 @@ Replace:
 - `curriculum/concepts.json` — concept catalog
 - `curriculum/ledger.json` — drill history
 - `curriculum/study-ledger.json` — recall state
+- `PATTERN.md` — the reusable pattern in one page
+- `SCENARIOS.md` — standalone, pair, and trinity scenarios
+- `AXIOMS.md` — local map to immutable StoneyTECH axioms
+- `graph/` — file-backed graph DB plus upgrade notes
+- `mcp/` — repo-local read-only MCP stub and manifest
+- `providers/` — BYO-provider upgrade map
+- `shadow/` — shadow-tribunal starter config
+- `integrations/n8n/` — workflow stub and handoff seams
 
 ## License
 
-Private. StoneyTECH llc.
+Apache-2.0
