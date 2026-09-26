@@ -252,6 +252,27 @@ python -m gvar_engine.trinity_demo --scenario evidence-learning
 python -m gvar_engine.trinity_demo --scenario trinity
 ```
 
+## Running tests
+
+No model key, network, or notification bridge required. Node 22 or later:
+
+```bash
+npm ci
+npm test
+```
+
+The suite pins the deterministic parts of the loop:
+
+- SM-2 scheduling and the picker's progression rules
+- study-ledger picking, loading, and saving
+- `npm run grade` against a temp ledger
+- `drill` and `study` in their no-API dry-run modes, plus the demo and the MCP stub
+- `curriculum/*.json` integrity: ledger slugs exist, every concept stays reachable
+
+Tests never touch the real ledgers. Scripts run against temp copies, and the run fails if anything under `curriculum/` changes.
+
+Tests marked `todo` are known bugs. They report without failing the run. Fix the bug, then drop the `todo`.
+
 ## What the example does
 
 This repo contains two small loops over the same curriculum:

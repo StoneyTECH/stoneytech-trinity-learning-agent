@@ -10,5 +10,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "curriculum/**/*"]
+  "include": ["src/**/*", "curriculum/**/*", "test/**/*"]
 }

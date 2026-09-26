@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Actions are pinned to commit SHAs: a tag can be moved to new code after it
+# was reviewed, a SHA cannot.
+
+jobs:
+  test:
+    name: typecheck and tests
+    runs-on: ubuntu-latest
+    # No secrets here, on purpose: the suite never calls the model or the
+    # notification bridge, and the scripts it launches run without a key.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # Matches the daily workflows. The test glob needs Node >= 21, which
+          # expands it inside the test runner instead of the shell.
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  # The nine-gate Build Order audit (github.com/StoneyTECH/ai-agent-build-order).
+  # A GAP fails the build; attested and unknown do not.
+  build-order:
+    name: Build Order audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: StoneyTECH/ai-agent-build-order@0af92d580156d9e2c234f0554ae34a674af06da9 # main, 2026-09-26
