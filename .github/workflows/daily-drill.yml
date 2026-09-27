@@ -16,15 +16,21 @@ on:
 permissions:
   contents: write
 
+# The three daily jobs all commit to main. One group runs them one at a time, so
+# their pushes can't race: the primer drill and the study job share 13:00 UTC.
+concurrency:
+  group: daily-ledger-commits
+  cancel-in-progress: false
+
 jobs:
   drill:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -56,6 +62,7 @@ jobs:
             git config user.email "drill-agent@stoneytech.net"
             git add output/ curriculum/ledger.json
             git commit -m "drill: $(date -u +%Y-%m-%d) — automated daily run"
+            git pull --rebase origin "$GITHUB_REF_NAME"
             git push
           else
             echo "No new draft (curriculum exhausted, or DRY_RUN). Nothing to commit."
