@@ -226,7 +226,7 @@
       "slug": "graph-constrained-execution",
       "title": "The graph is the architecture — integrity and concurrency for agentic systems",
       "tier": 1,
-      "register": "both",
+      "register": "architect",
       "lever": "orchestration",
       "prerequisites": ["determinism-ladder", "agents-vs-workflows"],
       "tags": ["graph", "dag", "orchestration", "concurrency", "integrity", "axiom-2", "axiom-4"],

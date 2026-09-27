@@ -58,13 +58,6 @@ function unreachable(register: RegisterFilter): string[] {
   return curriculum.concepts.filter((c) => conceptMatchesRegister(c, register) && !picked.has(c.slug)).map((c) => c.slug);
 }
 
-// KNOWN DATA BUG (see the todo below): graph-constrained-execution is register 'both', but both of
-// its prerequisites are architect-only, so the primer picker can never unlock it.
-const KNOWN_UNREACHABLE: Record<RegisterFilter, string[]> = {
-  architect: [],
-  primer: ['graph-constrained-execution']
-};
-
 describe('curriculum/concepts.json', () => {
   it('uses the v2 curriculum schema these checks are written for', () => {
     assert.equal(curriculum.schema, 'learning-agent-curriculum/v2');
@@ -105,22 +98,11 @@ describe('curriculum/concepts.json', () => {
 
   for (const register of ['architect', 'primer'] as const) {
     it(`lets the picker eventually reach every ${register} concept`, () => {
-      const stuck = unreachable(register).filter((slug) => !KNOWN_UNREACHABLE[register].includes(slug));
+      // A concept whose prerequisites exist only in another register can never be picked here.
+      const stuck = unreachable(register);
       assert.deepEqual(stuck, [], `never picked for ${register}: missing, cross-register or circular prerequisites?`);
     });
   }
-
-  it(
-    'lets the picker reach graph-constrained-execution in the primer register',
-    {
-      todo:
-        "curriculum/concepts.json: graph-constrained-execution is register 'both', but its prerequisites " +
-        '(determinism-ladder, agents-vs-workflows) are architect-only, so it can never be picked for primer.'
-    },
-    () => {
-      assert.deepEqual(unreachable('primer'), []);
-    }
-  );
 });
 
 describe('curriculum/ledger.json', () => {
