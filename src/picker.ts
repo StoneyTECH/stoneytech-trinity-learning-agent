@@ -50,9 +50,9 @@ export function pickNextConcept(
     if (a.tier !== b.tier) return a.tier - b.tier;
     if (a.prerequisites.length !== b.prerequisites.length)
       return a.prerequisites.length - b.prerequisites.length;
-    const aRecent = recentLevers.indexOf(a.lever);
-    const bRecent = recentLevers.indexOf(b.lever);
-    // Higher index = more recent → push down. -1 (not in recent) → top.
+    const aRecent = recentLevers.lastIndexOf(a.lever);
+    const bRecent = recentLevers.lastIndexOf(b.lever);
+    // Index of the lever's latest drill: higher = more recent → push down. -1 (not in recent) → top.
     return aRecent - bRecent;
   });
 

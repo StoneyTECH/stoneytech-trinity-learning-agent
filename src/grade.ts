@@ -26,10 +26,11 @@ if (args.length < 2) {
 }
 
 const slug = args[0];
-const qualityNum = parseInt(args[1], 10);
+const qualityArg = args[1];
 const notes = args.slice(2).join(' ').trim() || undefined;
 
-if (!Number.isInteger(qualityNum) || qualityNum < 0 || qualityNum > 5) {
+// Exactly one digit 0-5. parseInt would read "3.5" as 3 and "4x" as 4.
+if (!/^[0-5]$/.test(qualityArg)) {
   console.error('Quality must be an integer 0-5.');
   console.error('  0 — total blank');
   console.error('  1 — wrong, the right answer felt new');
@@ -39,7 +40,7 @@ if (!Number.isInteger(qualityNum) || qualityNum < 0 || qualityNum > 5) {
   console.error('  5 — instant, complete recall');
   process.exit(1);
 }
-const quality = qualityNum as Quality;
+const quality = Number(qualityArg) as Quality;
 
 const ledger = loadStudyLedger(STUDY_LEDGER_PATH);
 const entry = getOrCreateEntry(ledger, slug);

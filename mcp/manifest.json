@@ -7,8 +7,7 @@
     "get_pattern",
     "get_axioms_addressed",
     "get_scenarios",
-    "get_graph",
-    "get_templates"
+    "get_graph"
   ],
   "sources": [
     "../README.md",

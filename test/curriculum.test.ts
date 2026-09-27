@@ -1,7 +1,7 @@
 // Integrity checks on the committed curriculum data. These read the real files, and they are
 // written to keep passing as the daily jobs append to the ledgers. They fail only on data the
-// scripts could not have produced or cannot use. Files are parsed with JSON.parse directly:
-// loadStudyLedger would turn a corrupt file into an empty ledger and let every check pass.
+// scripts could not have produced or cannot use. Files are parsed with JSON.parse directly, so
+// no check here can pass because of a bug in the scripts' own loaders.
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

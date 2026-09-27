@@ -96,15 +96,14 @@ describe('nextSm2', () => {
     assert.equal(today.toISOString(), TODAY.toISOString());
   });
 
-  it(
-    'rounds a fractional interval up, as the cited SM-2 reference specifies',
-    {
-      todo:
-        'src/sm2.ts:59 uses Math.round, but Wozniak (1990), cited in the file header, says to round up. ' +
-        '6 * 2.36 = 14.16 schedules 14 days; the reference gives 15. Fix the code or the citation.'
-    },
-    () => {
-      assert.equal(nextSm2({ ease_factor: 2.36, interval: 6, repetitions: 2 }, 4, TODAY).interval, 15);
-    }
-  );
+  // 6 * 2.36 = 14.16 schedules 15 days, as Wozniak (1990) specifies, not the 14 that rounding to nearest gave.
+  it('rounds a fractional interval up, as the cited SM-2 reference specifies', () => {
+    assert.equal(nextSm2({ ease_factor: 2.36, interval: 6, repetitions: 2 }, 4, TODAY).interval, 15);
+  });
+
+  it('does not round an exact interval up because of floating-point error', () => {
+    // A new card graded 2, 3, 5, 3, 5, 5 reaches this state. 55 * 2.2 is exactly 121, but evaluates to
+    // 121.00000000000001, which a bare Math.ceil would schedule as 122 days.
+    assert.equal(nextSm2({ ease_factor: 2.2, interval: 55, repetitions: 5 }, 3, TODAY).interval, 121);
+  });
 });

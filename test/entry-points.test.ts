@@ -3,16 +3,22 @@
 // no bridge, fetch disabled). Their model-calling paths are deliberately not tested.
 
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import { getGraph, getRepoOverview } from '../mcp/server.ts';
+import { getAxiomsAddressed, getGraph, getPattern, getRepoOverview, getScenarios } from '../mcp/server.ts';
 import { loadCurriculum, pickNextConcept } from '../src/picker.ts';
 import { buildPrimerUserPrompt } from '../src/prompt-template-primer.ts';
 import { buildUserPrompt } from '../src/prompt-template.ts';
 import type { StudyLedgerFile } from '../src/study-ledger.ts';
-import { conceptMatchesRegister, type Concept, type LedgerFile, type RegisterFilter } from '../src/types.ts';
+import {
+  conceptMatchesRegister,
+  type Concept,
+  type LedgerEntry,
+  type LedgerFile,
+  type RegisterFilter
+} from '../src/types.ts';
 import { REPO_ROOT, guardRealData, readJson, runScript, sandbox, utcToday, writeJson } from './helpers.ts';
 
 after(guardRealData());
@@ -172,6 +178,36 @@ describe('study with DRY_RUN=1', () => {
   });
 });
 
+describe('list', () => {
+  it('counts each drilled concept once, and a rejected drill not at all', (t) => {
+    const dir = sandbox(t);
+    const [twice, rejected, redrilled] = curriculum.concepts.filter((c) => (c.register ?? 'architect') === 'architect');
+    const drill = (slug: string, drilled_at: string, status: LedgerEntry['status']) =>
+      ({ slug, register: 'architect' as const, drilled_at, draft_path: '-', status });
+    const ledger: LedgerFile = {
+      ...drillLedger('architect'),
+      drills: [
+        drill(twice.slug, '2026-05-01', 'draft'), // drilled twice, e.g. forced again with CONCEPT=
+        drill(twice.slug, '2026-05-02', 'merged'),
+        drill(rejected.slug, '2026-05-01', 'rejected'), // rejected, never redone
+        drill(redrilled.slug, '2026-05-01', 'rejected'), // rejected, then drilled again
+        drill(redrilled.slug, '2026-05-03', 'draft'),
+        drill('retired-concept', '2026-05-01', 'draft') // no longer in the curriculum
+      ]
+    };
+    writeJson(join(dir, 'ledger.json'), ledger);
+
+    const run = runScript('src/list-concepts.ts', [], dir);
+
+    assert.equal(run.status, 0, run.stderr);
+    const total = curriculum.concepts.length;
+    assert.ok(run.stdout.includes(`Drilled: 2 / ${total} (${total - 2} remaining)`), run.stdout);
+    assert.ok(run.stdout.includes(`✓ 2026-05-02 [T${twice.tier}] ${twice.slug} — `), twice.slug);
+    assert.ok(run.stdout.includes(`✓ 2026-05-03 [T${redrilled.tier}] ${redrilled.slug} — `), redrilled.slug);
+    assert.ok(run.stdout.includes(`· [T${rejected.tier}] ${rejected.slug} — `), rejected.slug);
+  });
+});
+
 describe('demo', () => {
   it('prints the default draft artifact, or a JSON summary with --json', (t) => {
     const dir = sandbox(t);
@@ -229,39 +265,51 @@ describe('local MCP stub', () => {
     edges: readJson(join(REPO_ROOT, 'graph/edges.json'))
   });
 
-  // mcp/server.ts reads files through a percent-encoded URL path (the todo below). In a checkout
-  // whose path needs encoding, e.g. one containing a space, the graph check would fail on that bug.
-  const encodedPathBug =
-    new URL('..', import.meta.url).pathname !== REPO_ROOT && 'known mcp/server.ts path bug, see the todo below';
-
   it('declares itself read-only in both the overview and the manifest', () => {
     assert.equal(getRepoOverview().mcp_mode, 'read-only');
     assert.equal(readJson<{ mode: string }>(join(REPO_ROOT, 'mcp/manifest.json')).mode, 'read-only');
   });
 
-  it('serves the file graph as-is, and `npm run mcp:demo` prints it with the overview', { skip: encodedPathBug }, (t) => {
+  it('implements every tool the manifest declares', async () => {
+    // Each tool is exported under its camelCase name: get_repo_overview is getRepoOverview.
+    const server: Record<string, unknown> = await import('../mcp/server.ts');
+    const { tools } = readJson<{ tools: string[] }>(join(REPO_ROOT, 'mcp/manifest.json'));
+    assert.ok(tools.length > 0, 'the manifest declares no tools');
+    for (const tool of tools) {
+      const impl = server[tool.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase())];
+      assert.equal(typeof impl, 'function', `mcp/manifest.json declares ${tool}; mcp/server.ts does not implement it`);
+      assert.ok((impl as () => unknown)(), `${tool} returned nothing`);
+    }
+  });
+
+  it('serves PATTERN.md, AXIOMS.md and SCENARIOS.md as-is', () => {
+    const read = (rel: string) => readFileSync(join(REPO_ROOT, rel), 'utf8');
+    assert.equal(getPattern(), read('PATTERN.md'));
+    assert.equal(getAxiomsAddressed(), read('AXIOMS.md'));
+    assert.equal(getScenarios(), read('SCENARIOS.md'));
+  });
+
+  it('serves the file graph as-is, and `npm run mcp:demo` prints it with the overview', (t) => {
     assert.deepEqual(getGraph(), graph());
     const run = runScript('mcp/server.ts', [], sandbox(t));
     assert.equal(run.status, 0, run.stderr);
     assert.deepEqual(JSON.parse(run.stdout), { overview: getRepoOverview(), graph: graph() });
   });
 
-  it(
-    'finds its graph files from a checkout path that contains a space',
-    {
-      todo:
-        'mcp/server.ts:4 builds ROOT from URL.pathname, which keeps "%20", so getGraph() throws ENOENT; ' +
-        'the :25 main guard never matches either, so `npm run mcp:demo` prints nothing and exits 0.'
-    },
-    async (t) => {
-      const root = join(sandbox(t), 'with space');
-      mkdirSync(join(root, 'mcp'), { recursive: true });
-      mkdirSync(join(root, 'graph'));
-      for (const rel of ['mcp/server.ts', 'graph/nodes.json', 'graph/edges.json']) {
-        copyFileSync(join(REPO_ROOT, rel), join(root, rel));
-      }
-      const copy = await import(pathToFileURL(join(root, 'mcp/server.ts')).href);
-      assert.deepEqual(copy.getGraph(), graph());
+  // From a path with a space, the server still finds its files and still recognizes itself as the main module.
+  it('finds its graph files, and runs as a script, from a checkout path that contains a space', async (t) => {
+    // realpath: the macOS temp dir sits behind a symlink, and Node reports the main module by its real path.
+    const root = join(realpathSync(sandbox(t)), 'with space');
+    mkdirSync(join(root, 'mcp'), { recursive: true });
+    mkdirSync(join(root, 'graph'));
+    for (const rel of ['mcp/server.ts', 'graph/nodes.json', 'graph/edges.json']) {
+      copyFileSync(join(REPO_ROOT, rel), join(root, rel));
     }
-  );
+    const copy = await import(pathToFileURL(join(root, 'mcp/server.ts')).href);
+    assert.deepEqual(copy.getGraph(), graph());
+
+    const run = runScript(join(root, 'mcp/server.ts'), [], root);
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(JSON.parse(run.stdout), { overview: getRepoOverview(), graph: graph() });
+  });
 });

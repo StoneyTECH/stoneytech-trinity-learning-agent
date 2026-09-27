@@ -11,7 +11,9 @@ const ROOT = resolve(__dirname, '..');
 const curriculum = loadCurriculum(join(ROOT, 'curriculum/concepts.json'));
 const ledger = loadLedger(process.env.DRILL_LEDGER || join(ROOT, 'curriculum/ledger.json'));
 
-const drilledMap = new Map(ledger.drills.map((d) => [d.slug, d]));
+// A rejected drill doesn't count, as in the picker. Keyed by slug, so a concept drilled in both
+// registers, or drilled again, is still one drilled concept.
+const drilledMap = new Map(ledger.drills.filter((d) => d.status !== 'rejected').map((d) => [d.slug, d]));
 
 console.log(`=== Curriculum: ${curriculum.concepts.length} concepts ===\n`);
 
@@ -32,6 +34,6 @@ for (const lever of Object.keys(byLever)) {
   console.log('');
 }
 
-const drilledCount = ledger.drills.length;
+const drilledCount = curriculum.concepts.filter((c) => drilledMap.has(c.slug)).length;
 const remaining = curriculum.concepts.length - drilledCount;
 console.log(`Drilled: ${drilledCount} / ${curriculum.concepts.length} (${remaining} remaining)`);

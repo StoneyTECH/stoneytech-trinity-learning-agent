@@ -307,8 +307,9 @@ DRY_RUN=1 npm run drill
 The study side uses SM-2 spaced repetition:
 
 - grades `0-2` reset the concept to near-term review
-- grades `3-5` expand the interval
-- state is kept per concept in `curriculum/study-ledger.json`
+- grades `3-5` expand the interval, rounding a fractional interval up to a whole day as the SM-2 reference does
+- `npm run grade` takes a whole-number grade from `0` to `5`; anything else, such as `3.5` or `4x`, is rejected and nothing is saved
+- state is kept per concept in `curriculum/study-ledger.json`; if that file exists but cannot be read or parsed, `study` and `grade` stop with an error naming it instead of starting from an empty ledger
 
 ## Copy this shape into a real app
 
@@ -333,6 +334,8 @@ This repo ships a file-backed graph DB and a read-only MCP stub:
 - [graph/nodes.json](./graph/nodes.json)
 - [graph/edges.json](./graph/edges.json)
 - [mcp/server.ts](./mcp/server.ts)
+
+The stub implements every tool in [mcp/manifest.json](./mcp/manifest.json), all read-only: `get_repo_overview`, `get_pattern` (PATTERN.md), `get_axioms_addressed` (AXIOMS.md), `get_scenarios` (SCENARIOS.md) and `get_graph` (the file graph).
 
 The graph starts as files on purpose. If the repo grows up:
 

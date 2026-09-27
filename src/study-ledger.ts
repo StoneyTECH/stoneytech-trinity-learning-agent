@@ -38,10 +38,20 @@ const EMPTY_LEDGER: StudyLedgerFile = {
 };
 
 export function loadStudyLedger(path: string): StudyLedgerFile {
+  // Only a missing file means "nothing studied yet". Any other failure must stop the run:
+  // an empty ledger returned here would later be saved over the real one.
+  let raw: string;
   try {
-    return JSON.parse(readFileSync(path, 'utf-8'));
-  } catch {
-    return EMPTY_LEDGER;
+    raw = readFileSync(path, 'utf-8');
+  } catch (err) {
+    // A fresh object each time: callers add entries to the ledger they get back.
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { ...EMPTY_LEDGER, entries: [] };
+    throw new Error(`Cannot read study ledger ${path}: ${(err as Error).message}`, { cause: err });
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Study ledger ${path} is not valid JSON: ${(err as Error).message}`, { cause: err });
   }
 }
 

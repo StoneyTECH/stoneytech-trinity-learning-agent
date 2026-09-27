@@ -173,22 +173,15 @@ describe('pickNextConcept', () => {
     assert.deepEqual({ c, l }, before);
   });
 
-  it(
-    'judges recency by the latest drill of each lever',
-    {
-      todo:
-        'src/picker.ts:53-54 uses indexOf, which finds the OLDEST occurrence in the recent window. ' +
-        'After drills on levers x, y, x it treats x as staler than y and picks the x concept. Should be lastIndexOf.'
-    },
-    () => {
-      const c = curriculum(
-        concept('a', { lever: 'x' }),
-        concept('b', { lever: 'y' }),
-        concept('p', { lever: 'x' }),
-        concept('q', { lever: 'y' }),
-        concept('r', { lever: 'x' })
-      );
-      assert.equal(pick(c, ledger(drilled('p'), drilled('q'), drilled('r'))), 'b');
-    }
-  );
+  // After drills on levers x, y, x, lever x is the most recent, so the y concept wins.
+  it('judges recency by the latest drill of each lever', () => {
+    const c = curriculum(
+      concept('a', { lever: 'x' }),
+      concept('b', { lever: 'y' }),
+      concept('p', { lever: 'x' }),
+      concept('q', { lever: 'y' }),
+      concept('r', { lever: 'x' })
+    );
+    assert.equal(pick(c, ledger(drilled('p'), drilled('q'), drilled('r'))), 'b');
+  });
 });

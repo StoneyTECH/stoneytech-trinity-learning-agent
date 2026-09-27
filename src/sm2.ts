@@ -16,7 +16,7 @@
 //
 // Behavior:
 //   - q < 3 → repetitions reset to 0, interval reset to 1 day (failure restarts the card).
-//   - q ≥ 3 → repetitions += 1; interval grows: 1 → 6 → previous*EF.
+//   - q ≥ 3 → repetitions += 1; interval grows: 1 → 6 → previous*EF, rounded up to whole days.
 //   - EF updates as: EF' = EF + (0.1 - (5-q) * (0.08 + (5-q) * 0.02)). Floor at 1.3.
 
 export interface SrsState {
@@ -56,7 +56,10 @@ export function nextSm2(prior: SrsState, quality: Quality, today: Date = new Dat
     repetitions += 1;
     if (repetitions === 1) interval = 1;
     else if (repetitions === 2) interval = 6;
-    else interval = Math.round(interval * ease_factor);
+    // The reference rounds a fractional interval up. Eases are kept to 2 decimals, so the exact product has
+    // at most 2; round2 recovers it first, or ceil would count floating-point noise as a fraction
+    // (55 * 2.2 evaluates to 121.00000000000001, which would schedule 122 days).
+    else interval = Math.ceil(round2(interval * ease_factor));
   }
 
   // EF update — applied on every review regardless of pass/fail.

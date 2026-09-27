@@ -127,17 +127,16 @@ describe('npm run grade', () => {
     assert.equal(readJson<StudyLedgerFile>(path).entries[0].attempts.at(-1)?.quality, 5);
   });
 
-  it(
-    'rejects a fractional grade instead of truncating it',
-    {
-      todo:
-        'src/grade.ts:29-32 parses with parseInt, so "3.5" is stored as 3 (and "4x" as 4); ' +
-        'the Number.isInteger check that should reject it can never fail.'
-    },
-    (t) => {
-      const dir = sandbox(t);
-      setUp(dir);
-      assert.equal(runScript('src/grade.ts', ['in-progress', '3.5'], dir).status, 1);
+  // "3.5" and "4x" get the usage error and leave the ledger alone, instead of being stored as 3 and 4.
+  it('rejects a fractional or non-numeric grade instead of truncating it', (t) => {
+    const dir = sandbox(t);
+    const path = setUp(dir);
+    const before = readFileSync(path, 'utf8');
+    for (const grade of ['3.5', '4x']) {
+      const run = runScript('src/grade.ts', ['in-progress', grade], dir);
+      assert.equal(run.status, 1, `grade ${grade}`);
+      assert.match(run.stderr, /Quality must be an integer 0-5/);
     }
-  );
+    assert.equal(readFileSync(path, 'utf8'), before);
+  });
 });

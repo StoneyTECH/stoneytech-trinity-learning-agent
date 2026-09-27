@@ -118,36 +118,25 @@ describe('loadStudyLedger / saveStudyLedger', () => {
     assert.deepEqual(l.entries, []);
   });
 
-  it(
-    'hands out a fresh empty ledger on every missing-file load',
-    {
-      todo:
-        'src/study-ledger.ts:44 returns the shared EMPTY_LEDGER constant itself, so entries added to one ' +
-        'fallback ledger show up in the next one loaded in the same process.'
-    },
-    (t) => {
-      const dir = sandbox(t);
-      const first = loadStudyLedger(join(dir, 'one.json'));
-      try {
-        getOrCreateEntry(first, 'leaked');
-        assert.deepEqual(loadStudyLedger(join(dir, 'two.json')).entries, []);
-      } finally {
-        first.entries.length = 0; // undo the leak so later tests in this file see a clean fallback
-      }
+  // Entries added to one missing-file ledger must not show up in the next one loaded in the same process.
+  it('hands out a fresh empty ledger on every missing-file load', (t) => {
+    const dir = sandbox(t);
+    const first = loadStudyLedger(join(dir, 'one.json'));
+    try {
+      getOrCreateEntry(first, 'leaked');
+      assert.deepEqual(loadStudyLedger(join(dir, 'two.json')).entries, []);
+    } finally {
+      first.entries.length = 0; // undo the leak so later tests in this file see a clean fallback
     }
-  );
+  });
 
-  it(
-    'refuses to treat a malformed ledger file as empty',
-    {
-      todo:
-        'src/study-ledger.ts:43 catches every error, not just a missing file, so a corrupt study-ledger.json ' +
-        'loads as empty. study.ts then saves over it; grade.ts reports "No attempts logged".'
-    },
-    (t) => {
-      const path = join(sandbox(t), 'study-ledger.json');
-      writeFileSync(path, '{ "entries": [ ');
-      assert.throws(() => loadStudyLedger(path));
-    }
-  );
+  // Only a missing file loads as empty: a corrupt or unreadable one throws, naming the file, so nothing saves over it.
+  it('refuses to treat a malformed or unreadable ledger file as empty', (t) => {
+    const dir = sandbox(t);
+    const path = join(dir, 'study-ledger.json');
+    writeFileSync(path, '{ "entries": [ ');
+    const naming = (file: string) => (err: unknown) => err instanceof Error && err.message.includes(file);
+    assert.throws(() => loadStudyLedger(path), naming(path));
+    assert.throws(() => loadStudyLedger(dir), naming(dir)); // exists, but reading it fails (EISDIR)
+  });
 });

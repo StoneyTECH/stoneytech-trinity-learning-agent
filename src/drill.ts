@@ -12,6 +12,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { repairFrontmatter } from './frontmatter.ts';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
 import { PRIMER_SYSTEM_PROMPT, buildPrimerUserPrompt } from './prompt-template-primer.ts';
@@ -132,29 +133,7 @@ console.log('');
 // Sanity check — the draft should have a complete frontmatter block (open + close).
 // Caught a real bug 2026-05-03 where Opus 4.7 omitted the closing ---, breaking the
 // site's build-time verification validator. Auto-repair if we can; warn loudly if not.
-const trimmed = draftText.trimStart();
-if (!trimmed.startsWith('---')) {
-  console.warn('⚠ Draft does not begin with frontmatter delimiter. Manual review required.');
-} else {
-  // Look for a second --- that closes the frontmatter. The opening --- is at index 0
-  // after trim, so search starts at index 3.
-  const closingIdx = trimmed.indexOf('\n---', 3);
-  if (closingIdx === -1) {
-    console.warn('⚠ Draft frontmatter is unterminated (no closing ---). Auto-repairing.');
-    // Find the first heading or first blank-line-followed-by-heading and inject --- before it.
-    const headingMatch = trimmed.match(/\n\n(##? )/);
-    if (headingMatch && headingMatch.index !== undefined) {
-      // Splice in the closing --- between the YAML and the heading.
-      draftText =
-        trimmed.slice(0, headingMatch.index) +
-        '\n---\n\n' +
-        trimmed.slice(headingMatch.index + 2); // strip the leading \n\n we already replaced
-      console.warn('  → Inserted --- before first heading.');
-    } else {
-      console.warn('  → Could not auto-repair (no clear body boundary). Draft will fail validation.');
-    }
-  }
-}
+draftText = repairFrontmatter(draftText);
 
 const filename = IS_PRIMER
   ? `daily-primer-${today}-${concept.slug}.svx`
