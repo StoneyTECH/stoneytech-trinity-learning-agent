@@ -1,5 +1,5 @@
 // Main daily-run entry point. Picks the next undrilled concept (filtered by
-// register), generates a register-appropriate .svx draft via Claude Opus 4.7,
+// register), generates a register-appropriate .svx draft through OpenRouter (LLM_MODEL),
 // writes it to the right drafts directory, and appends an entry to the ledger.
 //
 // Run: npm run drill                                    (architect register, default)
@@ -8,11 +8,11 @@
 //      DRY_RUN=1 SKIP_API=1 npm run drill               (no API call either)
 //      CONCEPT=<slug> npm run drill                     (force a specific concept)
 
-import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { repairFrontmatter } from './frontmatter.ts';
+import { complete, modelFromEnv } from './llm.ts';
 import { loadCurriculum, loadLedger, pickNextConcept } from './picker.ts';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt-template.ts';
 import { PRIMER_SYSTEM_PROMPT, buildPrimerUserPrompt } from './prompt-template-primer.ts';
@@ -29,9 +29,10 @@ const REGISTER: RegisterFilter =
 const IS_PRIMER = REGISTER === 'primer';
 
 const DRY_RUN_NO_API = process.env.DRY_RUN === '1' && process.env.SKIP_API === '1';
-const apiKey = process.env.ANTHROPIC_API_KEY;
+const apiKey = process.env.OPENROUTER_API_KEY;
+const MODEL = modelFromEnv();
 if (!apiKey && !DRY_RUN_NO_API) {
-  console.error('Error: ANTHROPIC_API_KEY not set. Copy .env.example to .env and fill it in.');
+  console.error('Error: OPENROUTER_API_KEY not set. Copy .env.example to .env and fill it in.');
   console.error('(Or run with DRY_RUN=1 SKIP_API=1 to test the picker + prompt assembly without an API call.)');
   process.exit(1);
 }
@@ -100,33 +101,33 @@ if (DRY_RUN_NO_API) {
   process.exit(0);
 }
 
-console.log(`Calling Opus 4.7 for ${REGISTER}-register draft generation...`);
+console.log(`Calling ${MODEL} for ${REGISTER}-register draft generation...`);
 // Upgrade seam:
 // - map the draft role through agents/graph-map.json when provider routing
 //   should choose local, vendor, or OpenRouter paths
 // - add shadow draft judges from shadow/tribunal-config.example.json when
 //   draft quality should be compared without blocking the primary loop
 
-const client = new Anthropic({ apiKey: apiKey! });
 const startTime = Date.now();
 
-const response = await client.messages.create({
-  model: 'claude-opus-4-7',
-  max_tokens: 8000,
+const response = await complete({
+  apiKey: apiKey!,
+  model: MODEL,
   system: systemPrompt,
-  messages: [{ role: 'user', content: userPrompt }]
+  user: userPrompt,
+  maxTokens: 8000
 });
 
 const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
 
-let draftText = response.content
-  .filter((b) => b.type === 'text')
-  .map((b) => (b.type === 'text' ? b.text : ''))
-  .join('\n');
+let draftText = response.text;
 
-console.log(`✓ Draft generated in ${elapsedSec}s.`);
-console.log(`  tokens — in: ${response.usage.input_tokens}, out: ${response.usage.output_tokens}`);
-console.log(`  stop reason: ${response.stop_reason}`);
+console.log(`✓ Draft generated in ${elapsedSec}s by ${response.model}.`);
+console.log(
+  `  tokens — in: ${response.inputTokens}, out: ${response.outputTokens}` +
+    (response.costUsd === null ? '' : ` · cost $${response.costUsd.toFixed(4)}`)
+);
+console.log(`  finish reason: ${response.finishReason}`);
 console.log(`  draft length: ${draftText.length} chars`);
 console.log('');
 
@@ -202,7 +203,7 @@ if (process.env.NOTIFY !== '0') {
     `<b>Lever:</b> ${concept.lever} · <b>Tier:</b> ${concept.tier} · <b>Anchor:</b> axiom #${concept.anchor_axiom}`,
     excerpt ? `\n<i>${excerpt}</i>` : ``,
     ``,
-    `<b>Stats:</b> ${response.usage.input_tokens} in / ${response.usage.output_tokens} out · ${elapsedSec}s · ${draftText.length} chars`,
+    `<b>Stats:</b> ${response.inputTokens} in / ${response.outputTokens} out · ${response.model} · ${elapsedSec}s · ${draftText.length} chars`,
     ``,
     ghLink ? `<a href="${ghLink}">📄 View draft on GitHub</a>` : `📄 ${draftPath}`
   ];

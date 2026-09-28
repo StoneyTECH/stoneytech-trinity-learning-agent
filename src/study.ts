@@ -1,5 +1,5 @@
 // Study entry point. Picks next concept due for SR, generates a Q+A pair via
-// Opus 4.7, sends an optional notification with the question + canonical answer
+// the configured model (LLM_MODEL, through OpenRouter), sends an optional notification with the question + canonical answer
 // (collapsed below a separator), records an open attempt in the study ledger.
 //
 // Stoney later runs `npm run grade <slug> <0..5>` to log the self-assessed
@@ -10,9 +10,9 @@
 //   CONCEPT=<slug>            — force a specific concept
 //   NOTIFY=0                  — skip bridge delivery
 
-import Anthropic from '@anthropic-ai/sdk';
 import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { complete, modelFromEnv } from './llm.ts';
 import { loadCurriculum } from './picker.ts';
 import {
   loadStudyLedger,
@@ -35,9 +35,10 @@ const NOTIFY = process.env.NOTIFY !== '0';
 
 const today = new Date().toISOString().slice(0, 10);
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
+const apiKey = process.env.OPENROUTER_API_KEY;
+const MODEL = modelFromEnv();
 if (!apiKey && !DRY_RUN) {
-  console.error('Error: ANTHROPIC_API_KEY not set. Copy .env.example to .env and fill it in.');
+  console.error('Error: OPENROUTER_API_KEY not set. Copy .env.example to .env and fill it in.');
   process.exit(1);
 }
 
@@ -76,35 +77,32 @@ console.log(
 );
 
 if (DRY_RUN) {
-  console.log('[dry-run] Would call Opus 4.7 for Q+A generation.');
+  console.log(`[dry-run] Would call ${MODEL} for Q+A generation.`);
   console.log('[dry-run] Would send notification digest.');
   console.log('[dry-run] Would record open attempt in study-ledger.');
   process.exit(0);
 }
 
-console.log('Calling Opus 4.7 for Q+A generation...');
+console.log(`Calling ${MODEL} for Q+A generation...`);
 // Upgrade seam:
 // - route this study role through agents/graph-map.json when provider selection
 //   should be job-specific
 // - run silent shadow graders or question reviewers from
 //   shadow/tribunal-config.example.json when recall quality needs a tribunal
-const client = new Anthropic({ apiKey: apiKey! });
 const startTime = Date.now();
 
-const response = await client.messages.create({
-  model: 'claude-opus-4-7',
-  max_tokens: 1500,
+const response = await complete({
+  apiKey: apiKey!,
+  model: MODEL,
   system: STUDY_SYSTEM_PROMPT,
-  messages: [{ role: 'user', content: buildStudyUserPrompt(concept) }]
+  user: buildStudyUserPrompt(concept),
+  maxTokens: 1500
 });
 
 const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
-const rawText = response.content
-  .filter((b) => b.type === 'text')
-  .map((b) => (b.type === 'text' ? b.text : ''))
-  .join('\n');
+const rawText = response.text;
 
-// Tolerant JSON extraction — Opus is well-behaved but sometimes wraps in code fences.
+// Tolerant JSON extraction: models sometimes wrap the object in code fences.
 let parsed: { question?: string; canonical_answer?: string } | null = null;
 try {
   parsed = JSON.parse(rawText);
@@ -118,13 +116,16 @@ try {
   }
 }
 if (!parsed?.question || !parsed?.canonical_answer) {
-  console.error('Failed to parse Opus output as {question, canonical_answer}.');
+  console.error(`Failed to parse ${response.model} output as {question, canonical_answer}.`);
   console.error('Raw output (first 500 chars):', rawText.slice(0, 500));
   process.exit(1);
 }
 
-console.log(`✓ Generated in ${elapsedSec}s.`);
-console.log(`  tokens — in: ${response.usage.input_tokens}, out: ${response.usage.output_tokens}`);
+console.log(`✓ Generated in ${elapsedSec}s by ${response.model}.`);
+console.log(
+  `  tokens — in: ${response.inputTokens}, out: ${response.outputTokens}` +
+    (response.costUsd === null ? '' : ` · cost $${response.costUsd.toFixed(4)}`)
+);
 console.log('');
 
 // Append the open attempt to the ledger.

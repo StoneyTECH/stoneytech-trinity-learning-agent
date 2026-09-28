@@ -106,13 +106,13 @@ describe('drill with DRY_RUN=1 SKIP_API=1', () => {
     assert.match(unknown.stderr, /Concept slug not found: no-such-concept/);
   });
 
-  it('refuses to start without ANTHROPIC_API_KEY unless both DRY_RUN and SKIP_API are set', (t) => {
+  it('refuses to start without OPENROUTER_API_KEY unless both DRY_RUN and SKIP_API are set', (t) => {
     const dir = sandbox(t);
     writeJson(join(dir, 'ledger.json'), drillLedger('architect'));
     for (const env of [{}, { DRY_RUN: '1' }]) {
       const run = runScript('src/drill.ts', [], dir, env);
       assert.equal(run.status, 1, JSON.stringify(env));
-      assert.match(run.stderr, /ANTHROPIC_API_KEY not set/);
+      assert.match(run.stderr, /OPENROUTER_API_KEY not set/);
     }
   });
 });
@@ -171,10 +171,10 @@ describe('study with DRY_RUN=1', () => {
     assert.match(unknown.stderr, /Concept slug not found: no-such-concept/);
   });
 
-  it('refuses to start without ANTHROPIC_API_KEY outside DRY_RUN', (t) => {
+  it('refuses to start without OPENROUTER_API_KEY outside DRY_RUN', (t) => {
     const run = runScript('src/study.ts', [], sandbox(t));
     assert.equal(run.status, 1);
-    assert.match(run.stderr, /ANTHROPIC_API_KEY not set/);
+    assert.match(run.stderr, /OPENROUTER_API_KEY not set/);
   });
 });
 

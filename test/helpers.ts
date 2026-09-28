@@ -54,14 +54,15 @@ export function guardRealData(): () => void {
 
 // Every env knob the scripts read. Child processes never inherit these from the developer's shell.
 const SCRIPT_ENV = [
-  'ANTHROPIC_API_KEY',
   'CONCEPT',
   'DRAFTS_DIR',
   'DRILL_LEDGER',
   'DRY_RUN',
   'GITHUB_REF_NAME',
   'GITHUB_REPOSITORY',
+  'LLM_MODEL',
   'NOTIFY',
+  'OPENROUTER_API_KEY',
   'REGISTER',
   'SKIP_API',
   'STUDY_LEDGER',

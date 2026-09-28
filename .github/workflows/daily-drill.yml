@@ -40,7 +40,9 @@ jobs:
 
       - name: Run drill
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Any OpenRouter model id, set as a repository variable. Unset: the default in src/llm.ts.
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
           # CI writes to a local dir under the workspace; we commit the file
           # back to the drill-agent repo so we have a permanent record + a
           # GitHub link to ship in the Telegram digest.

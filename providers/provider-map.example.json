@@ -1,14 +1,14 @@
 {
   "roles": {
     "draft_agent": {
-      "preferred": "anthropic",
-      "alternatives": ["openai", "google", "openrouter", "local"],
-      "default_model": "claude-opus-4-7"
+      "preferred": "openrouter",
+      "alternatives": ["anthropic", "openai", "google", "local"],
+      "default_model": "anthropic/claude-opus-5.5"
     },
     "study_agent": {
-      "preferred": "anthropic",
-      "alternatives": ["openai", "openrouter", "local"],
-      "default_model": "claude-opus-4-7"
+      "preferred": "openrouter",
+      "alternatives": ["anthropic", "openai", "local"],
+      "default_model": "anthropic/claude-opus-5.5"
     }
   },
   "notes": [

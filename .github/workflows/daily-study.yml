@@ -39,7 +39,9 @@ jobs:
 
       - name: Run study
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Any OpenRouter model id, set as a repository variable. Unset: the default in src/llm.ts.
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           CONCEPT: ${{ github.event.inputs.concept }}

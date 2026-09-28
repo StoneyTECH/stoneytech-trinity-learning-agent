@@ -121,13 +121,12 @@ For those cases, pair it with `StoneyTECH-Trinity-Evidence-Agent` or `StoneyTECH
 
 ## Bring your own model
 
-This repo starts with a direct Anthropic path, but it should grow with the reader.
+Every model call goes through OpenRouter (`src/llm.ts`), so one key reaches any lab's models and the model is a setting, not code. The default is `anthropic/claude-opus-5.5`. Set `LLM_MODEL` to any OpenRouter model id: in `.env` for local runs, or as a repository variable for the scheduled jobs (`gh variable set LLM_MODEL --body <model-id>`).
 
 Upgrade later to:
 
 - local agents
 - direct vendor keys across providers
-- OpenRouter routing
 - graph-mapped role selection
 - shadow tribunals for draft or study quality
 - `n8n` scheduling and webhook delivery
@@ -207,7 +206,7 @@ That is the full public proof set:
 
 ```bash
 cp .env.example .env
-# Fill in ANTHROPIC_API_KEY in .env
+# Fill in OPENROUTER_API_KEY in .env
 
 npm install
 npm run hello

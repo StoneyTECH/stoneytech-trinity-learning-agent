@@ -43,7 +43,9 @@ jobs:
 
       - name: Run primer drill
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Any OpenRouter model id, set as a repository variable. Unset: the default in src/llm.ts.
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
           # Switch the agent into Demystify-AI voice + 8-section primer template.
           REGISTER: primer
           # CI writes to a register-scoped subdir under output/drafts so the
